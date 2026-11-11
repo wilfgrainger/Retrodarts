@@ -1,0 +1,23 @@
+'use strict';
+// Unit test for the Drive merge: extracts mergeSyncData from index.html and checks union, deletions and theme recency.
+const assert=require('node:assert'),fs=require('node:fs'),path=require('node:path');
+const html=fs.readFileSync(path.resolve(__dirname,'..','index.html'),'utf8');
+const m=html.match(/function mergeSyncData\(local,remote,themes\)\{[\s\S]*?\n  \}\n/);
+assert(m,'mergeSyncData is present');
+const mergeSyncData=new Function(m[0]+'\nreturn mergeSyncData;')();
+const rec=(id,at)=>({id,version:1,archivedAt:at,fixture:{phase:'complete',teams:[{name:'A',games:1},{name:'B',games:0}]}});
+const themes=['retro','led','modern','pub-oche'];
+const local={theme:'retro',themeUpdatedAt:'2026-11-01T10:00:00Z',deleted:{gone:'2026-11-02T00:00:00Z'},fixtures:{a:rec('a','2026-11-01T00:00:00Z'),gone:rec('gone','2026-10-01T00:00:00Z')}};
+const remote={theme:'modern',themeUpdatedAt:'2026-11-03T10:00:00Z',deleted:{},fixtures:{b:rec('b','2026-11-04T00:00:00Z'),gone:rec('gone','2026-10-01T00:00:00Z'),bad:{id:'bad'}}};
+const out=mergeSyncData(local,remote,themes);
+assert.deepEqual(Object.keys(out.fixtures).sort(),['a','b'],'union of both sides, minus deleted and malformed records');
+assert.equal(out.theme,'modern','the more recently changed theme wins');
+assert.equal(mergeSyncData({...local,themeUpdatedAt:'2026-11-05T00:00:00Z'},remote,themes).theme,'retro','a newer local theme is kept');
+assert.equal(mergeSyncData(local,{...remote,theme:'nonsense',themeUpdatedAt:'2027-01-01'},themes).theme,'retro','an unknown remote theme is ignored');
+assert.ok(out.deleted.gone,'deletions are kept so other devices remove the match too');
+assert.deepEqual(Object.keys(mergeSyncData(local,null,themes).fixtures),['a'],'first sync with no Drive file keeps local matches');
+const sl={vibration:false,updatedAt:'2026-11-05T00:00:00Z'},sr={vibration:true,updatedAt:'2026-11-06T00:00:00Z'};
+assert.equal(mergeSyncData({...local,settings:sl},{...remote,settings:sr},themes).settings,sr,'newer Drive settings win');
+assert.equal(mergeSyncData({...local,settings:{...sl,updatedAt:'2026-11-07T00:00:00Z'}},{...remote,settings:sr},themes).settings.vibration,false,'newer device settings win');
+assert.equal(mergeSyncData({...local,settings:sl},{...remote,settings:'junk'},themes).settings,sl,'malformed Drive settings are ignored');
+console.log('DRIVE SYNC MERGE PASS');

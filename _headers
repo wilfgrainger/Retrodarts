@@ -1,0 +1,21 @@
+/*
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+  Cross-Origin-Opener-Policy: same-origin-allow-popups
+  Content-Security-Policy: default-src 'none'; script-src 'sha256-wnXZBZVPCPAP5y40AvReX9jkYi/4n2qZw2hRWN8D79U=' 'sha256-VxgZhruNtLUjTPyClxIfUR9vD63UGdQWsAj+928QWGg=' 'sha256-fWW+ojSOYnGh7PHvnDmpGV/soxHSEKzZpNFlqgY5J6s=' 'sha256-R7Av0zB48IsWu2BUGnd+ZVnS/6+5CS+/9GVn4NMZ0A4=' https://accounts.google.com/gsi/client https://www.googletagmanager.com https://www.gstatic.com/cv/js/sender/ https://www.gstatic.com/eureka/clank/ https://www.gstatic.com/cast/sdk/libs/sender/; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; img-src 'self' https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com; font-src 'self' data:; manifest-src 'self'; worker-src 'self'; connect-src 'self' https://www.googleapis.com https://accounts.google.com/gsi/ https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com; frame-src https://accounts.google.com/gsi/; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'
+
+/
+  Cache-Control: no-cache, must-revalidate
+
+/sw.js
+  Cache-Control: no-cache, must-revalidate
+
+/tv/*
+  ! Content-Security-Policy
+  Cache-Control: no-cache, must-revalidate
+
+/manifest.webmanifest
+  Cache-Control: no-cache, must-revalidate

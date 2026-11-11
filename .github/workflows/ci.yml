@@ -1,0 +1,32 @@
+name: Scoring checks
+# Pull requests compare the release version with origin/main; pushes to main compare it with the commit before the push.
+# Cloudflare Pages also runs the same checks on main before it publishes.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: scoring-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  scoring:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+      # A new branch push has an all-zero "before" SHA; leave RELEASE_BASE_SHA unset then and fall back to origin/main.
+      - run: |
+          if [ "$EVENT" = push ] && [ "${BEFORE//0/}" != "" ]; then export RELEASE_BASE_SHA="$BEFORE"; fi
+          node scripts/check.cjs
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}

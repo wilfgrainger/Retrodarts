@@ -1,0 +1,29 @@
+# Retro Darts Scorer
+
+> Retro Darts Scorer is a free darts scoring app for pub teams and leagues. It shows a big red LED scoreboard for 301, 401 and 501, does the arithmetic for every visit (busts, finishes, averages), and creates a PDF match report. It works offline in any modern browser, needs no account and has no adverts. Matches are saved on the user's own device; a user who signs in with Google also has them backed up to a private app folder in their own Google Drive. Google Analytics runs only if the user accepts it in the cookie banner. It is a scorer only: it
+
+Key facts:
+- Games: 301, 401 and 501 for two teams (home and away).
+- TV: Cast to TV sends the scoreboard to a Chromecast as small score updates, not video, so it works on slow pub Wi-Fi. Needs Chrome on Android or a computer.
+- Formats: fixture as play all, best of, or first to; legs per game as best of or first to; bull-up decides who throws first, with a deciding-leg bull-up.
+- A visit is at most 180. A visit that scores more than the player has left, or would leave 1, is a bust and does not count.
+- Average: three-dart average, points x 3 / darts thrown, counting each visit as three darts.
+- Output: PDF match report (fixture result, every game and leg, every visit, busts, highest scores and finishes), created on the device.
+- Works offline once loaded; installable to the home screen; four colour themes on one layout (Retro, Retro Black, Modern, Classical Pub).
+- Designed to be read from the oche on a wall-mounted tablet; tuned on an Amazon Fire Max 11 in landscape; also works on phones and desktops.
+- Price: free. Licence: MIT (app code). Language: English (UK).
+
+## Docs
+
+- [FAQ](https://retrodarts.com/faq/): scoring and bust rules, how it fits league rules and fixture formats (with a worked example from a published league rulebook), optional checkout hints, averages, PDF reports, offline use and themes.
+- [Privacy policy](https://retrodarts.com/privacy/): what is stored (on the device and in the user's own Google Drive), what is not collected.
+
+## App
+
+- [Open the scorer](https://retrodarts.com/): start a 301, 401 or 501 match straight away.
+
+## Optional
+
+- [Licence](https://retrodarts.com/LICENSE): MIT licence for the app code.
+- [Asset credits](https://retrodarts.com/ASSETS.md): fonts and image credits.
+- [Contact](mailto:support@retrodarts.com): support and security reports.

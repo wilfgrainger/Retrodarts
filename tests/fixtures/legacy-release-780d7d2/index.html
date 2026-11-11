@@ -1,0 +1,1277 @@
+<!doctype html>
+<!--
+MIT License
+
+Copyright (c) 2026 Wilfred Grainger
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#171612">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Retro Darts">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="description" content="A free retro-style darts scorer. No accounts or adverts.">
+<title>Retro Darts Scorer</title>
+<style>
+/* Layout primitives; yellow theme follows. */
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;min-height:100vh;min-height:100dvh}body{-webkit-tap-highlight-color:transparent}button,input,select{font:inherit}button{touch-action:manipulation;cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--gold);outline-offset:2px}[hidden]{display:none!important}
+.app{width:min(100%,760px);height:100vh;height:100dvh;min-height:100vh;min-height:100dvh;margin:auto;display:flex;flex-direction:column;overflow:hidden}
+.app,.app .screen{scrollbar-width:none;-ms-overflow-style:none}
+.app::-webkit-scrollbar,.app .screen::-webkit-scrollbar{display:none;width:0;height:0}
+.top{display:flex;align-items:center;gap:10px}
+.game{display:flex;flex-direction:column;flex:1;min-height:0}
+.scorebar{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;text-align:center}
+.team-mini{min-width:0}.team-mini strong{display:block}.fixture-score{display:flex;align-items:center;justify-content:center;gap:8px}.fixture-score i{font-style:normal}
+.progress{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.cards{display:grid;grid-template-columns:1fr 1fr;min-height:0}
+.card{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:space-around;text-align:center}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);flex:1;min-height:0}
+.actions{display:grid}
+.screen{flex:1;display:flex;flex-direction:column}.setup{width:min(100%,490px);margin:0 auto;padding:22px 4px 30px}.field{display:block;margin:12px 0 16px}.field input,.field select{display:block;width:100%;margin-top:6px;padding:12px;font-size:16px;letter-spacing:0;text-transform:none}.team-grid,.format-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.team-grid .field{margin:7px 0 15px}.settings-title{margin:18px 0 8px}.setting{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:8px;padding:11px 0;border-top:1px solid #ffffff18}.setting>span{font-size:14px;font-weight:700}.setting small{display:block;margin-top:2px;font-size:11px;font-weight:400}.setting select{width:100%;padding:10px}.toggle-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid #ffffff18;font-size:14px;font-weight:700}.toggle-row input{width:22px;height:22px;accent-color:var(--gold)}.start{width:100%;margin-top:18px}
+.shade{position:fixed;inset:0;z-index:4;background:#000b;display:grid;place-items:center;padding:16px}.dialog{width:min(100%,420px);max-height:90vh;max-height:90dvh;overflow:auto;padding:20px 18px}.dialog .eyebrow{text-align:center}.dialog h2{text-align:center;font-size:24px;margin:7px 0}.dialog p{text-align:center;font-size:14px;line-height:1.4;margin:8px 0 15px}.dialog-actions{display:grid;gap:8px;margin-top:15px}.dialog-actions button{min-height:45px}.starter-pick{display:grid;grid-template-columns:1fr 1fr;gap:8px}.starter-pick button{min-height:54px;overflow:hidden;text-overflow:ellipsis;font-size:13px;font-weight:800}.toast{position:fixed;z-index:21;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);padding:11px 16px;font-size:13px;font-weight:800;white-space:nowrap}
+</style>
+<style>
+/* Yellow electronic pub scorer */
+:root{color-scheme:light;--bg:#191712;--board:#f4d845;--panel:#fff0a1;--chalk:#19150e;--muted:#534318;--gold:#f6d945;--edge:#44351c;font-family:Arial,Helvetica,sans-serif;color:var(--chalk)}
+html,body{background:#14120f;color:#17130c}.app{background:#f1d441;border:10px solid #171612;border-bottom:12px solid #171612;box-shadow:inset 0 0 0 3px #a88921,0 4px 22px #0009;padding:env(safe-area-inset-top) 10px env(safe-area-inset-bottom)}
+.top{margin:0 -10px 5px;padding:7px 12px;background:#181612;border:0;border-bottom:3px solid #8e7427;color:#f6da5a}.brand{font:900 clamp(16px,4vw,22px) Arial,sans-serif;letter-spacing:.08em;text-shadow:none}.brand span{color:#fff1ad}.subbrand{font:700 9px Arial,sans-serif;color:#e9dca0;letter-spacing:.15em}.top button{background:#b3312c;border:1px solid #e66d5e;color:#fff;border-radius:2px}
+.setup{color:#21180a}.eyebrow,.settings-title{color:#4c330c;font:800 10px Arial,sans-serif}.setup h1{font-family:Arial,sans-serif;font-weight:900;letter-spacing:-.04em}.lede,.field,.privacy{color:#4e3c13}.field{font:800 10px Arial,sans-serif}.field input,.field select,.setting select{color:#17130e;background:#fff0a1;border:2px solid #4d3c1e;border-radius:1px;font-family:Arial,sans-serif}.setting,.toggle-row{border-color:#ad9335}.setting>span,.toggle-row{font-family:Arial,sans-serif;color:#21180c}.toggle-row input{accent-color:#a72523}.primary{background:#b72e29;color:#fff;border:2px solid #781c19;box-shadow:inset 0 1px #ef8a72;border-radius:2px;font:900 13px Arial,sans-serif;letter-spacing:.05em}.secondary{background:#302c21;color:#f8e8a4;border:1px solid #6d5c39;border-radius:2px;font:800 11px Arial,sans-serif}
+.game{padding:4px 0 4px;gap:5px;color:#1c160c}.scorebar{background:#eacc39;border-bottom:2px solid #30281a;padding:5px 2px}.team-mini strong{font:900 clamp(12px,3.5vw,17px) Arial,sans-serif;letter-spacing:.02em}.team-mini span{font:800 9px Arial,sans-serif;color:#59420e}.fixture-score{background:#171511;border:2px solid #3b2d1c;border-radius:2px;color:#f45541;font:italic 700 27px monospace;min-width:78px;justify-content:center;padding:1px 6px;text-shadow:0 0 5px #ef3d3d80}.fixture-score i{color:#b56b56}
+.progress{border:0;padding:4px 1px;color:#4f3d10;font:800 9px Arial,sans-serif}.progress strong{color:#251c0c}.cards{gap:4px;flex:1.15}.card,.card.active{background:transparent;border:0;border-radius:0;padding:4px 3px;min-height:165px}.card.active{box-shadow:inset 0 0 0 2px #8c6c14}.turn{font:900 9px Arial,sans-serif;color:#5b4310;letter-spacing:.1em}.card.active .turn{color:#8a1e19}.card h2{font:900 clamp(13px,4vw,21px) Arial,sans-serif;color:#20180e;letter-spacing:-.03em}.remaining{width:100%;background:#100f0e;color:#f04a38;border:3px solid #30251a;border-radius:3px;font:italic 500 clamp(55px,16vw,95px)/1.04 monospace;letter-spacing:-.075em;text-shadow:0 0 7px #ff271f90;box-shadow:inset 0 0 14px #000}.stats{border-top:0;gap:12px;padding-top:3px}.stats span{font:800 9px Arial,sans-serif;color:#2a200d}.stats b{display:block;background:#15120f;color:#ef5540;border-radius:2px;padding:1px 8px;font:italic 700 17px monospace;text-shadow:0 0 4px #ee413b70}.in-status{color:#85241a}
+.visit{background:#1a1713;color:#f5d34b;border:0;padding:6px 10px}.visit label{color:#e8d194;font:800 9px Arial,sans-serif}.visit strong{color:#f35340;background:#080808;border-radius:2px;padding:0 9px;font:italic 700 28px monospace;text-shadow:0 0 5px #ee343480}.preview{color:#f0dc9c;font:11px Arial,sans-serif}.preview.bad{color:#ffaaa1}.keypad{gap:4px;background:#171512;padding:6px;min-height:180px}.keypad button{background:linear-gradient(#dc594d,#b52b27);border:1px solid #f3866e;border-bottom:3px solid #781916;border-radius:2px;color:#fff2d6;font:700 clamp(24px,6vw,34px) Arial,sans-serif;min-height:38px}.keypad button:active{background:#ee7867;transform:translateY(1px)}.keypad .soft{background:#625842;border-color:#a89976;color:#fff2cb;font:900 11px Arial,sans-serif}.actions{background:#171512;gap:4px;padding:0 6px 6px}.actions .primary{background:#b72e29}.actions .secondary{background:#403a2a;color:#f8e6a4}.foot{background:#171512;color:#d3bd78;font:700 8px Arial,sans-serif;letter-spacing:.12em;padding:3px}
+.dialog{background:#f4d845;border:5px solid #181612;border-radius:2px;color:#19140c}.dialog h2{font:900 23px Arial,sans-serif;color:#1b140b}.dialog p{color:#4e3a11}.dialog .eyebrow{color:#7b271c}.starter-pick button{background:#211d16;border:2px solid #433721;color:#f7e4a2;border-radius:1px}.starter-pick button.selected{background:#b52b27;border-color:#7b1b18;color:white}.toast{background:#1b1711;color:#f4da57;border:1px solid #b99b3a;border-radius:2px}
+.last-score{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin:3px 0}.last-score span{color:#382909;font:800 9px Arial,sans-serif;letter-spacing:.04em}.last-score strong{min-width:52px;background:#100f0e;color:#f04a38;border:2px solid #30251a;border-radius:2px;padding:1px 5px;font:italic 700 clamp(18px,4.6vw,25px) monospace;text-shadow:0 0 5px #ff271f90}
+button:disabled{opacity:.45;cursor:not-allowed}
+@media (max-height:720px) and (orientation:portrait){.game{gap:3px}.card,.card.active{min-height:140px}.keypad{min-height:165px}.remaining{font-size:clamp(46px,13vh,75px)}}
+
+/* Clear turn indication and retro setup typography; no external font requests. */
+.brand{font:900 clamp(15px,4vw,22px) "Courier New",monospace;letter-spacing:.07em}.subbrand{font:700 10px "Courier New",monospace;letter-spacing:.12em}.setup h1{font:900 clamp(27px,7vw,40px)/1.05 "Rockwell","Courier New",monospace;letter-spacing:-.05em;text-shadow:1px 1px #d6b640}.setup .eyebrow,.setup .settings-title,.setup .field{font-family:"Courier New",monospace;font-weight:900}.setup .settings-title{font-size:12px;letter-spacing:.1em}.setup .field{font-size:12px}.setup .primary{font-family:"Courier New",monospace;font-size:16px}
+.turn-banner{background:#991d1a;border:2px solid #4c100e;color:#fff;min-height:31px;padding:5px 8px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:900 clamp(12px,3.8vw,18px) Arial,sans-serif;letter-spacing:.02em}.card.active{background:#fff1a5;box-shadow:inset 0 0 0 4px #a8241d}.card .turn{height:auto;min-height:19px;padding:2px 6px;color:#49360e;font:800 10px Arial,sans-serif}.card.active .turn{background:#991d1a;border:1px solid #68120f;color:white;font:900 clamp(10px,2.8vw,13px) Arial,sans-serif;letter-spacing:.03em}.card.active .remaining{border-color:#a8241d}.card:not(.active){opacity:.8}
+@media (max-height:720px) and (orientation:portrait){.turn-banner{min-height:25px;padding:3px 5px;font-size:12px}.card .turn{min-height:16px;padding:1px 4px}.card.active .turn{font-size:10px}.game{gap:2px}.card,.card.active{min-height:128px}.keypad{min-height:150px}.keypad button{min-height:33px}}
+
+/* DSEG fonts by keshikan, licensed under SIL OFL 1.1; full licence follows.
+Copyright (c) 2017, keshikan (http://www.keshikan.net),
+with Reserved Font Name "DSEG".
+
+
+This Font Software is licensed under the SIL Open Font License, Version 1.1.
+This license is copied below, and is also available with a FAQ at:
+http://scripts.sil.org/OFL
+
+
+-----------------------------------------------------------
+SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
+-----------------------------------------------------------
+
+PREAMBLE
+The goals of the Open Font License (OFL) are to stimulate worldwide
+development of collaborative font projects, to support the font creation
+efforts of academic and linguistic communities, and to provide a free and
+open framework in which fonts may be shared and improved in partnership
+with others.
+
+The OFL allows the licensed fonts to be used, studied, modified and
+redistributed freely as long as they are not sold by themselves. The
+fonts, including any derivative works, can be bundled, embedded, 
+redistributed and/or sold with any software provided that any reserved
+names are not used by derivative works. The fonts and derivatives,
+however, cannot be released under any other type of license. The
+requirement for fonts to remain under this license does not apply
+to any document created using the fonts or their derivatives.
+
+DEFINITIONS
+"Font Software" refers to the set of files released by the Copyright
+Holder(s) under this license and clearly marked as such. This may
+include source files, build scripts and documentation.
+
+"Reserved Font Name" refers to any names specified as such after the
+copyright statement(s).
+
+"Original Version" refers to the collection of Font Software components as
+distributed by the Copyright Holder(s).
+
+"Modified Version" refers to any derivative made by adding to, deleting,
+or substituting -- in part or in whole -- any of the components of the
+Original Version, by changing formats or by porting the Font Software to a
+new environment.
+
+"Author" refers to any designer, engineer, programmer, technical
+writer or other person who contributed to the Font Software.
+
+PERMISSION & CONDITIONS
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of the Font Software, to use, study, copy, merge, embed, modify,
+redistribute, and sell modified and unmodified copies of the Font
+Software, subject to the following conditions:
+
+1) Neither the Font Software nor any of its individual components,
+in Original or Modified Versions, may be sold by itself.
+
+2) Original or Modified Versions of the Font Software may be bundled,
+redistributed and/or sold with any software, provided that each copy
+contains the above copyright notice and this license. These can be
+included either as stand-alone text files, human-readable headers or
+in the appropriate machine-readable metadata fields within text or
+binary files as long as those fields can be easily viewed by the user.
+
+3) No Modified Version of the Font Software may use the Reserved Font
+Name(s) unless explicit written permission is granted by the corresponding
+Copyright Holder. This restriction only applies to the primary font name as
+presented to the users.
+
+4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font
+Software shall not be used to promote, endorse or advertise any
+Modified Version, except to acknowledge the contribution(s) of the
+Copyright Holder(s) and the Author(s) or with their explicit written
+permission.
+
+5) The Font Software, modified or unmodified, in part or in whole,
+must be distributed entirely under this license, and must not be
+distributed under any other license. The requirement for fonts to
+remain under this license does not apply to any document created
+using the Font Software.
+
+TERMINATION
+This license becomes null and void if any of the above conditions are
+not met.
+
+DISCLAIMER
+THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
+OF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+INCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
+DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
+OTHER DEALINGS IN THE FONT SOFTWARE.
+
+*/
+@font-face{font-family:DSEG14ClassicMini;src:url(data:font/woff2;base64,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) format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:DSEG7Classic;src:url(data:font/woff2;base64,d09GMgABAAAAABQEAA4AAAAAXDQAABOrAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP0ZGVE0cGhwGYACCcggEEQgKvTipPQuBEgABNgIkA4E2BCAF73sHgTIbr1AjA8HGARB5FCYjklBOQ/OXCbwMkazuzRACg4hXd7qA4Rh606anZ+2JITbD18jfVL5zsUZAJPjMMRoTz+Ty8Pz+nn7tc/EGEBuAKKQJdRw/s+Ske/y4994HOYNJZmNagthX0irgn8HgeoKBNht8IJj8zWxV3vq8NDepctLHWbz6ghn6gOb4TxlHIRpsK2s5sDx1tbNMxLm5YceCFh8ofdSLFP9rWRlVdcu5CgFiWxYghaBlWGzmZ76fs/rztxS96ytKJeNLzs8pIjOrsl31jowbWYsuDlpmrEViB9BBgxxy9Ag3nh09Cu6Qbo9q5X3QcJsD6XtR//3bG/rN/GVr7SotyhFnIvIjorSrYM4c0q8EdsJFu5cBSsZAc/spQsDbP8sB4LU+F4uAD25pJwWggRZwSAgE8qxjDCvUSRfT0xq43PIZq3d9ZmhgSIqMolf6UrBkfXOgRRe72XdY18iJNSWDhl00q0mHMGeXBPph4iwBmmDBoiszTpKkq7VbVejClAVP6TLRL7/68vevLx/enxJwHSUK+f9MEp63kOXia4tSbWn5WZo0BYBmzXl8gXA76k96tUaro6unb2BoZAzAAKaDzC0sraxtbO3sHRydnF1c3dw9pnp5+/j6Af4vng0/uGuqAaLa/8M5H/s60Q7UfqDei1PEVgYNpe80hFJSKOQKpVxNKVMqZAyqZWFJwywvpGFOYAuauNxajpu6TWrEEh1fK+uupKlD6yLbIGQQpSnOo1Ur4hvUpK6I4bcFmzYAaGEr1B2awVivS9C6ANOBhi1S8h9UGqTMD7Z+0TBfVb+od3ABamDSYvR3z02Pr/duTs62zE1t9W1MxBsl12+5dE0Sj5I8vul36Ew3XNFgZ2tqwpio9emGCfVaLVtf7UAzWt3wIBFy63UCrH1ufSnG7FuqdX2z2SUyQWD3J2mSRBXsfiJ0yc19GFeT7nh6PLN+eI+FU0l+iT/R/01O9qTd6aUzh44b9X0byXG/E4frAW7kaqcHziX0AKY1LkzUReiJgOYLJdOmhiXK1G1y2WS4/Pqpubv1+PyRNBDjo7mrSNpwDQ1Pnntz0lVhSTK3nSV7G/9ANlcsvXkh852qZ+ve+RavEq7MFv+o7Mazk9CupnPbTFXHRTXVVMvXDWv7sPtCe5v69i7iqRFS7UKnhvYutO5OL4/ZdeyJDW/SYH5c3Ax2kPXVruhsE/1Z3P0q7St0vLvvTTnwGFun9Txj/VvPcy59yu7uC8nPx/sdIuKA3D/tJpgaDod0SedP8lBLNZDe55MXvW77h/+O9l8geF7V9Hibou32dFWQYotyxMzY4bdmpuRuVBbjKXm470ZdsMdKiZ7eq+me+xbSBZLnEJ80kYHgzz5+5Slm1PShi9oLR+92meyMnzBC2tmTn894OZE+G6e7mbDMSB518ekGoytdy5P6lzRW435OX9gNz8kbccTH+PKMc+eRav4H+2UHDeLU0Rngj/c4DJ6wX8v9PGyvLD5qOyJLK5RBNihW6HvL+LdDgvGbiODwzZaOETc3nvA3qX723cHttQrtk/6IPnJSRwLBIem1IezDq1/eJgcZbppHCTX3xoXAc2RDKnuHkVltOdUts0hhR8jXnGjOLbzStRYdkWRFMkbSnFpQ3Px8uf8HciDMYYkIEkJgCjMA2oQeBJiiVYDQ0KcCJKV/IJAZEjkQyLWIIwEKDeIXAUrNkxYCdXVLDRBooHV6FqBh0166doBAI+1GjQnQHG3Uc5CJvC7O0TEK7ZyNkgZ+HmW2RBrl+sTEqNAm3kelXvE/qmtGjh41MCgtjxp2W5C+GzUyYlTqu92caNQ2zcwSYmWkgbZO0BuiOmzPisARyzpoSkS55TtPdgi6VDuHRjpZ1hs7c6YFH9b+fDXVqkUkKxWXKz/wjbTjvY1wKvgzTSXmqaQd4WV9jqPT69ta8qD9Cdba1pFyWRRsbeK3O+iZZynFnIJn8vvuWXbvWRQqszyT3737+F3RR891DA3MVSot/FO4cKNypXLpvLag6JVHjtGt9cqRVcqNFzfVVXVud3MKo72Fsu+kKB4kUUxE6Fzt2q3iIp2XntfXt3ZSM7FUfBKpRjZIsvlbxx7sQV9tJAL21717vUSUijGuo7e17B8/7En4C7H36+/9fZ+kLKYoOSbPVNs7wJEWL/uEnrnqfqfXT1UUmeidJGwnuxGNOCW06X29cM9AaRqbJMTTSyYwshq8mSSHkLHnzo7mrFB8/YVs/KoGwEZ8Xi985jXRyo6shOCI/WXdTCKd0gyiZq4giND1jTPv0EI/HEjPv0tkJuqj7IL+ZLT4ZIcjjnbBmXJn4omjrFgwHr2z5Sn595kPLObf+5ZHkKJY2PLR8v2dsjGwpVTO3M/Uy1RNMa8O9cYzC1Pv4Pf/vOr3WTDglE8T81MW5jblzPP5c1ub7CWqHCu3lz8y2UoGVnJy8v/quTuNnxl8Wpl49OHJu8nr3QnaEcMFdzgz3ZEVGllYl9D9eSYbVcaCwT2av8j40mtc1DQI/K0HN5a9IK4ZxrpWvf/oslhZulBgjSn+7/Wz/kOcTBmMZtDrL2tWF3ktXNVaUxtA2oEseVway7G4EiggNIjb3aOdAetW9yqBQB7xWxnRHYiA1wMRGyppoQoaroCYYR/afLI8yz0EIL7STS86hVbBzYF1ivzNSHVWzTYw9Mp7Riwq/XCVRefTjPk+SUX+ZR97GVkR9AZ9qc+aQi1oTUcHDTq86zCixle3Dhp8Vgbype23owaV1pR7J2xraFTMWDwbtbkpYiROgDp78nYWJW+18M2MRyWAimdINBS/ZkGbGraV45XwTIlSthzI477X2WoIiBtnProtlcIzIRR6WDea0wQelpmczQn0OZsd4AKturiDteFB+N61RalsKxBd3Kd8RwNFqVR81schp6tdwLAsQedLm0CziS5QiCPwM99vaxwq/SA0KDsFNkcSdbsDhi3Nfwb8b5d/SKC2UGBQbUDDRtGtAVQNoc3axOYi+V9B2PPgW4UzwLiMdPoLdW5fJj8r/YaUtVvAefFH1IuJqZm5mY2Zhbk18LVh6VcS0go7Og5nq6ISyVv8rETNDCPch420An8C8eFDkhFVkmcPqpuqKXEkHIp9/FSritIb/ng4fp2D1IDGixeDxCE1maAc4bCBMVKbza4AYcsBfm3IXY2Am8KY56pXl9Wt2umEbA768bMBtyKoIrvIwBiG18U4cctsrLmlOYh7BwGDDPupqy+59POezFISPauC9E134HkhK130UX7pr2l1o6HpAI6OflWNMmGIkeZHuQGaDNVtF6qzYUSwj0a7BRLDbzEiwhh3sK6ddmQdDh0Y+KAwGsl/YnegIoGJhUs1Hnd9MkzBFG8weYHX8gixTzpgqYhOZmvlkZx0s5JtzLTeiUVWkB6lU65q3TXIIjzYmBGnE3diRQ1P0kZD0B9WnPYwM2IbbOmJLgdwGinopzXswSsfZtbWlVCin/Ggw6KXqpBPmFsDpuZilQWwknVWvUawedO1CYW9kKVnIIZ1XPfNYitXsXVDDeyiDdemK8csbj9h191yYkTReZUQXd9r6cM03LX3HWYUe+uSvk2j8OKP/TuF5VTveQJSAitb3CNZi6UBbNldBMCZ/KtQYwBcKKE5wh5Nj2UWF6eUUQ698kTbbnVIkdbsUVPRPZg6mJGS1SQSX9XCNcOCwSxto/KiXSqnTsqjgOu0dvx5LhgHYraK2PbAEVHwCkfTXzrtPQJqLt4suB+jxTG2a3hdmzwdw8Us7GyMHTrUtR/Nk6qKXUGVUvmZ/5fbXdZJeNeql882d3PandUk1ZZFCShoz5T+FiYJg+kbpdEqT7vmU/qXhRMys9DNSjgNDkO2G9+KOV3d128Vtv6k6AKMNq/creUw2ntsV0hXTeEZXj3POYnKxL8wz13q2qgPA3+9AB/aiKT27hOei3qmDW2qYwW60otT4RhoWtC1z1iUWVobDVcVK4LwR3qzRnN46XwWRq0bfpwNHmHKvEagS9MoaC4TOwZbrboNr3XzeC7yhrmT7OCxNXceG5sbSS9EdyuHEvZvH1hL/L6wDqTGh1SKtDFYaTVOs03VW0ef3wn4XY3r3uqQvp4by9kD6jH553cej/c/CLYS2QwgjRxO+55PdeJuH1Ljc54A5xx8k9rg4u0JWB32zTFrUGOA4APnik41i0DULN1sJt9TzJqNZ4U+bF1ek2/Cuhbm5uLN10UO57ww8TwgdZk5bFPPPa4t3Z7WWeZomYyuQzawTc2B4H8/N9auyK7ttLdnd/N6HLAFz/dyv35TqssuRN1EA4ZCnpBt663Z1rxI+6aLXzmqGvdQTDC0IH1AFt/Ju8hlRaaYFSkbEj/hDwVP6EtOjsKhqMT3VIuWxAyzRqhNddGpks5yk8uJDzfv0DqxNv6UjyzSgVoPPjeKRdLa0RTIVFl53JCVCpKCPEE6FAaq25YTJGkSbbLpOtJ5Nu9euU5AlHHFVFSbpkYEgWYLINkVuaz+I3ffFUOapWOUTmQoEhagufUpUVS3mQ6ejP5oWpB7I/EQFxCBmy8XvNwH74JWVxcWr1ZCX+mppOPj3pwDDWDJCJiU9/fX7Iqa0A8u4BkkJnY9I0l67l2JTM+s70rVHswMZ1l/w/riosg3FWRgFeaIFVwAOhAEUsBvTFrp7yLnxiyarGYiA8mY3Te4yBu5oZDZdLQcBLykzhcxxBSOuk4fFo4WEsZsN5icERDj6fNgYc5EL0TtU5OFt/S0VuRsZaKxK4Ox4N84eTw4+iOUnaX5wyYm1RHBz/hJQ39ko1+77mUn6wqOsZ1pBh7md/969m7x2qwP2gV88Lz0ok7s/tCDby7gUWkCbahsbIikLmyWj2Bx+rhEm8eQG0R5WCp7OsHli+k74IuoEijA/s/JfBAzMMhAwYtbscLLW4IxsTCmJ/NTwOdq8vjx9D6BTUdoHYIqM16Rd8TRYvpeYvV/zCyomcPgbSaa8SJgGLSYNrzk4JcJsw4ijHCzmj09g9sHbEfJY6T4ZpHpledwM6EPaPEYpBjOkwLDYqEEH6bo/Z51vIgdS/B5E/YktWgGwCSuXkzf0XwUn45WNGUHblkDVcFmXClrD09EeKGuWvPQOgEUh8JM8/FLV206AnlR+u1LbTyhiUsTCUbUUMRKZn9sfFruQGFLTTMZfLBpu/JMEka1QwIZKMO+a9NS9i/NcGk4xUAtRbNi0z1EkuZvUKsB4InDajAMG2e5wy0BX4Zqt+Xh+wvKh8ICRaEofAXgQNzGa7dxlkSY4A2ApgOpQOgOSfgzPw9ba4Dgpx8JXxXW/Fd2D4g6hizEMb/Rc6dId8CfVoh6TC0zT2UIPJtz1RijyPPqYE9watiYoIxMY4wYXmqFdsaeBeCrQnaFQDXZWndQJ8ifQWurBYBJXD9FjbUUzxApKDf/Q8SFrrA0PQZabRVO37YKPBiRKGNUzyV65oBNZhGz+7IY9j5Puf0tBiRhF1DsqiqY8ljSK4ORoSUkFurUSzcWLYRS2GZMMrceYPSxpCV0peRTMCwPk/mXQqQj6J3yy+amIrlk8/xspp/pQjTjXOSDe5pzGHqwNTtLuWujLoWZ2lIDdFbrzM/ep5kBiu2YlWW/WoK/32SvxnrljXRDuiUQvZXjDizmMXxJ25H6ERNCCxnz97sQClc+XIlXyOHVb2CIgxio6RqHOMeR0VjyYeCxASMIH6/rTa4BuOCtt9TmZVHSKfMwzmZGvOPnVgMc8c0zSsLjercavcZawwYG+joALndtL1MWx9pjYjeMBeYlgQqpTuaAcGXAh56ysF6QOYXHSn6X0s1sO6DY7PDHGUyUVMQngh9C3RnMUlMlss3DOcuuorNrK3AMkRZWlr0tjDlrIqhZnCMwZySD9rJ/y7EpZqRFNHglSjsh05bUbTup3nNP8/1PNcAVzqVeOr4AkDRU1AMgjQFCnedpNhDSXjsy4NLjrISWaKNqFHolZreUyJII3cqHIJKuNEi92iq4u8P5plvmjusmgcaUo7hR6WbpMFnFho3jF6LgQGogKC54GH9Hio0kJWGOjUWn7EIo+Z0Gw3baYx1Cv81Sh5eRPsg0juLgPTCPaD5Ea+gwIC0sN5UTU3Ceenq4pBe9RgvtMgAf9c9aRpq2PKgQ85K2Qyn6t9d4Iyy8MJfCxteFAucHh9B+mxlsbN9whd/WgYBP5m0JKLmHW53s1I5Tz6bxOoBxIB3qRYN/NcBGkW/IOLB6f0B09i3UCbuXNGxEq5BLG8EP/+ONSPbH+9FBYdy37fL2WF52cf5jfJp78fDT1ry3fSodbYdY9/EfdYreGDPdBxCEpY972PxTkDGam9rW1PY2AViDortfFMaVevjehJxPg0m/Gpp49M24EWnU0HyIicww5ayyCxBCg1O0Cr9xFbw0IH1Kkcm+qcD1NPrtiy6Y1kQRCqgCsw0eD6foZy+qIjvUX6ayblQWG4vH3hoVt+8SU2wAFaRoGtH3lOmdZOPeng4ED+j9y4a3MZ4aMFBql0Bf2nud77t/dvkYdHgwLYwfE7QZ7S4glvpB6US1vWPLxk/+JjP4K40l4YcO3l8tfUoz9lQsWXFizcbfKf2WmtmrLK2crG0AEtU/qNoM82X7HEDouyTXBBsXD5+AkIiYhJSMnA5devQZMGTEmAlTZsxZyKZXX4ktO/YcOHLizIUrr980zf0FbAwSLESosO9TfjORokSLEStOvASJkiRLkaoN) format("woff2");font-weight:400;font-style:italic;font-display:swap}
+/* Give the last visit its own large LED window on each side. */
+.last-score{gap:5px}.last-score span{flex:0 0 auto;text-align:left;font-size:clamp(8px,2.3vw,10px);line-height:1.15}.last-score strong{flex:1;min-width:0;line-height:1.05;font-size:clamp(28px,8vw,45px);letter-spacing:-.07em}
+/* Electronic display lettering throughout the interface. Team names remain unchanged in storage. */
+body,body .app *,body .shade *,body .toast{font-family:"Arial Narrow",Arial,sans-serif!important;text-transform:uppercase!important}
+body .app .brand{font-family:DSEG14ClassicMini,monospace!important}
+body .app .remaining,body .app .last-score strong,body .app .visit strong,body .app .fixture-score,body .app .fixture-score b,body .app .stats b,body .app .keypad button:not(.soft){font-family:DSEG7Classic,monospace!important;font-style:italic}
+body .setup h1{font-size:clamp(26px,7vw,40px);letter-spacing:.01em;line-height:1.1}body .setup .field,body .setup .settings-title{font-size:11px;letter-spacing:0}body .setup .field input{font-size:14px;letter-spacing:0}body .setting>span,body .setting select{font-size:11px}body .setup .primary{font-size:14px}body .card h2{font-size:clamp(11px,3vw,17px);letter-spacing:0}body .turn-banner{font-size:clamp(10px,2.7vw,15px)}body .dialog h2{font-size:clamp(17px,4.8vw,23px)}body .dialog p{font-size:12px;line-height:1.5}body .starter-pick button{font-size:10px}body .preview{font-size:10px}
+
+/* Reserve real border and padding space so the highlight cannot cross text. */
+.card,.card.active{border:3px solid transparent;padding:6px 8px}
+.card.active{border-color:#a8241d;box-shadow:none}
+@media (max-height:720px) and (orientation:portrait){.card,.card.active{padding:4px 7px}}
+
+/* Keep the most useful information legible at phone size. */
+body .card h2{font-size:clamp(14px,3.8vw,20px);line-height:1.1}
+body .turn-banner{font-size:clamp(14px,3.6vw,18px)}
+.card:not(.active){opacity:1}
+.card .turn,.card.active .turn{font-size:12px}
+.last-score span{font-size:12px;letter-spacing:0}
+.stats span{font-size:11px;letter-spacing:0}
+.progress{font-size:11px;letter-spacing:0}
+body .preview{font-size:12px}
+body .setup .field,body .setup .settings-title,body .setting>span,body .setting select{font-size:14px}
+body .starter-pick button{font-size:13px}
+
+/* Five visits per team remain visible throughout the leg. */
+.history-block{display:block;width:100%;margin:2px 0;padding:2px 0;text-align:left;appearance:none;background:transparent;border:0;color:inherit;cursor:pointer;min-height:40px}
+.history-heading{display:flex;align-items:center;justify-content:space-between;gap:3px;margin-bottom:2px}
+.history-action{font:800 8px Arial,sans-serif;color:#8f281f;white-space:nowrap}
+.history-label{display:block;font:800 10px Arial,sans-serif;letter-spacing:.02em;color:#20180e}
+.history{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px}
+.history span{display:block;min-width:0;text-align:center;background:#201810;color:#fff3cf;padding:3px 0;font:900 clamp(12px,3.3vw,18px)/1 Arial,sans-serif}
+.history span.latest{background:#9d241d;color:#fff}
+
+/* Scrollable visit ledger; keep this inside the result dialog above its close button. */
+.history-scroll{max-height:min(56vh,560px);max-height:min(56dvh,560px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-right:3px;scrollbar-width:thin}
+.history-leg{margin-bottom:12px;border:1px solid #6e5e38;background:#231e17}
+.history-leg-title{padding:9px 8px;color:#f6db82;background:#44361f;font:900 13px Arial,sans-serif;position:sticky;top:0;z-index:1}
+.history-columns,.history-row{display:grid;grid-template-columns:30px minmax(0,1fr) 60px 56px;align-items:center;gap:5px;padding:6px 7px;text-align:left}
+.history-columns{font:900 9px Arial,sans-serif;color:#d0b76f;background:#171411}
+.history-row{border-top:1px solid #544731;color:#f7e9bb;font:800 12px Arial,sans-serif;min-height:35px}
+.history-row:nth-child(even){background:#2e2619}
+.history-row .history-team{min-width:0;overflow-wrap:anywhere}
+.history-row .history-score{color:#ff6655;font:italic 700 17px DSEG7Classic,monospace!important}
+.history-row .history-left{font:700 14px Arial,sans-serif;color:#f9e4a9}
+.history-row.is-bust .history-score{color:#ffa16b}
+.history-empty{padding:12px 8px;color:#ead9a6;font:12px Arial,sans-serif}
+@media(max-width:370px){.history-columns,.history-row{grid-template-columns:25px minmax(0,1fr) 53px 43px;gap:3px;padding-left:5px;padding-right:5px}}
+/* Keep the team name and all five visits visible on compact portrait screens. */
+@media (orientation:portrait){
+  .remaining{font-size:clamp(40px,min(13vw,8vh),85px)}
+  .card h2,.card .turn,.history-block,.last-score,.stats{flex-shrink:0}
+}
+
+/* Keep match controls on the scoring screen while hiding the setup header. */
+.actions{grid-template-columns:1.4fr 1fr 1fr 1.1fr}
+.actions button{font-size:clamp(10px,2.7vw,12px)}
+
+/* Keep the leg and average readouts inside the team panel. */
+.stats{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:6px;width:100%}
+.stats>div{min-width:0}
+.stats span{font-size:clamp(9px,2.6vw,11px);white-space:nowrap}
+body .app .stats b{font-family:"Arial Narrow",Arial,sans-serif!important;font-style:normal;font-size:clamp(14px,4vw,19px);padding:2px;white-space:nowrap}
+
+/* A digital scoreboard for the completed game and current fixture. */
+.result-board{background:#171512;border:3px solid #4d391e;padding:14px 8px;text-align:center;color:#f9e69a}
+.result-label{font:900 12px Arial,sans-serif;letter-spacing:.08em;margin:3px 0 8px}
+.result-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto minmax(0,1fr);align-items:center;gap:5px;margin:8px 0 16px}
+.result-team{font:900 clamp(11px,3.5vw,16px)/1.15 Arial,sans-serif;overflow-wrap:anywhere;min-width:0}
+body .shade .result-digit{font:italic 400 clamp(32px,10vw,50px)/1 DSEG7Classic,monospace!important;color:#ff5946;text-shadow:0 0 6px #ed413999}
+.result-dash{font:900 22px Arial,sans-serif;color:#f7d85a}
+.result-legs{display:flex;justify-content:center;align-items:center;gap:12px}
+body .shade .result-legs .result-digit{font-size:clamp(25px,7vw,34px)!important}
+
+/* End-of-fixture review uses the same LED score treatment as the game scoreboard. */
+.final-board .result-row{margin-bottom:13px}
+.final-summary{border-top:1px solid #8f7840;padding-top:10px;text-align:left}
+.final-summary>.result-label{text-align:center;margin-bottom:9px}
+.final-header,.final-line{display:grid;grid-template-columns:72px 68px minmax(0,1fr);gap:6px;align-items:center}
+.final-header{padding:5px 7px;color:#d4b85f;font:800 10px Arial,sans-serif;text-align:left}
+.final-header span:last-child{text-align:right}
+.final-line{min-height:32px;padding:6px 7px;border-top:1px solid #5c4b30;font:800 12px Arial,sans-serif;color:#f9e69a}
+.final-line .review-legs{font:italic 500 19px DSEG7Classic,monospace;color:#ff5946;text-shadow:0 0 5px #ed413999;white-space:nowrap}
+.final-line .review-winner{text-align:right;font-size:11px;overflow-wrap:anywhere}
+@media(max-width:370px){.final-header,.final-line{grid-template-columns:60px 62px minmax(0,1fr);gap:4px}}
+/* Optional fullscreen keeps the scoring layout, including five-visit history. */
+.fullscreen-setup{width:100%;margin-top:9px;min-height:39px}
+.foot{display:flex;align-items:center;justify-content:space-between;gap:5px;padding:2px 5px}
+.foot .fullscreen-mini{background:#383024;color:#f0d570;border:1px solid #897141;border-radius:2px;font:800 9px Arial,sans-serif;min-height:24px;padding:3px 8px}
+
+html:fullscreen .app{width:100%;max-width:none;height:100vh;height:100dvh;min-height:100vh;min-height:100dvh;border:0;box-shadow:none;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+/* DartCounter-inspired control placement; retains the pub-board palette and scoring. */
+.game .visit{display:grid;grid-template-columns:minmax(0,1fr) clamp(96px,27%,166px);align-items:stretch;gap:6px;padding:6px;background:#171512;min-width:0}
+.game .visit-entry{display:flex;flex-direction:column;justify-content:center;min-width:0;gap:3px;padding:5px 9px;background:#0a0908;border:2px solid #67512c;border-radius:2px}
+.game .visit-heading{display:block;font:800 10px Arial,sans-serif;color:#e8d194;letter-spacing:.06em}
+.game .visit-readout{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+body .app .visit strong{display:block;font-size:clamp(28px,7.5vw,44px);line-height:1.1;white-space:nowrap;min-width:48px;padding:0;background:none}
+body .app .visit .preview{flex:1;min-width:0;text-align:right;color:#f0dc9c;font:800 clamp(9px,2.2vw,12px)/1.2 Arial,sans-serif}
+body .app .visit .preview.bad{color:#ffaaa1}
+body .app .visit-submit{width:100%;min-height:66px;padding:6px 5px;font:900 clamp(13px,3vw,17px)/1.1 Arial,sans-serif;letter-spacing:.02em;align-self:stretch}
+.game .actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+.game .actions button{min-width:0;min-height:39px;padding:7px 3px;font-size:clamp(10px,2.6vw,12px)}
+/* Without duplicate team labels the remaining scores get the reclaimed panel space. */
+.game .cards .card{justify-content:space-around}
+@media(max-width:365px){.game .visit{grid-template-columns:minmax(0,1fr) 97px}.game .visit-entry{padding:5px}.game .visit-readout{gap:4px}}
+@media(max-height:720px) and (orientation:portrait){.game .visit{padding:4px;gap:4px}.game .visit-submit{min-height:56px}.game .actions button{min-height:36px}}
+/* Phone landscape: scores on the left, keypad on the right, all on one screen. */
+@media (orientation:landscape) and (max-height:600px){
+  .app{width:100%;max-width:none;overflow:hidden}
+  .app .game{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(220px,.82fr);grid-template-rows:auto auto auto minmax(0,1fr) auto;grid-template-areas:"bar bar" "prog prog" "cards visit" "cards keys" "cards acts";gap:4px;flex:1;min-height:0;overflow:hidden}
+  .app .scorebar{grid-area:bar}.app .progress{grid-area:prog}
+  .app .cards{grid-area:cards;min-height:0;height:auto;align-self:stretch}
+  .app .card,.app .card.active{min-height:0;height:100%;padding:3px;justify-content:space-evenly}
+  .app .remaining{font-size:clamp(28px,11vh,48px);letter-spacing:-.02em;white-space:nowrap}
+  .app .visit{grid-area:visit;min-height:0}
+  .app .keypad{grid-area:keys;height:auto;min-height:0;max-height:none;grid-template-rows:repeat(4,minmax(0,1fr))}
+  .app .keypad button{min-height:0}
+  .app .actions{grid-area:acts}
+  body .app .last-score strong{font-size:clamp(16px,5vh,28px)}
+  .app .history span{font-size:clamp(10px,2.4vh,14px);padding:2px 0}
+  body .app .visit-submit{min-height:0}
+  body .app .game .actions button,body .app .game .history-block{min-height:0}
+}
+/* Backspace, zero and Undo share the bottom keypad row. */
+.game .keypad [data-key="0"]{grid-column:2}
+.game .keypad [data-key="erase"]{grid-column:1}
+.game .keypad #undo{grid-column:3}
+.game .actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (orientation:landscape) and (max-height:600px){
+  .app .actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+/* The welcome screen keeps the main action in view on a phone. */
+.landing{padding-top:16px;gap:0}
+.landing .landing-hero{gap:14px;margin:3px 0 10px}
+.landing .landing-logo{width:clamp(64px,18vw,82px);border:1px solid #171512}
+body .landing h1{font-size:clamp(24px,6.5vw,34px);line-height:1.05;letter-spacing:0}
+.landing .lede{margin:0 0 10px;font:700 14px/1.4 Arial,sans-serif;color:#3d2b11}
+.landing .start{margin:0;min-height:54px;font-size:15px;box-shadow:0 3px 0 #701c16;letter-spacing:.06em}
+.landing-photo{display:block;width:100%;height:auto;aspect-ratio:1513/1039;object-fit:cover;border:3px solid #171512;margin:0 0 15px;box-shadow:0 4px 0 #ab8d2c}
+@media(max-height:700px){.landing{padding-top:9px}}
+.restore-warning{position:fixed;z-index:12;top:0;left:0;right:0;background:#7a1d17;color:#fff;padding:12px;font:700 13px/1.4 Arial,sans-serif;text-align:center}.save-blocker{position:fixed;inset:0;z-index:20;background:#000c;display:grid;place-items:center;padding:16px}.save-warning{width:min(100%,420px);max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow:auto;background:#f4d845;color:#19140c;border:4px solid #171512;padding:20px;box-shadow:0 12px 40px #0008}.save-warning h2{margin:0 0 10px;font:900 22px Arial,sans-serif}.save-warning p{font:700 14px/1.45 Arial,sans-serif}.save-warning button{display:block;width:100%;margin-top:8px;min-height:46px}.dialog h2{overflow-wrap:anywhere}
+
+
+.top{position:relative}.top .brand{flex:1;min-width:0}
+.top .menu-toggle{display:grid;place-items:center;flex:none;width:46px;min-width:46px;height:46px;min-height:46px;margin-left:auto;padding:0;background:#302b20!important;color:#f6da5a!important;border:2px solid #8e7427!important;border-radius:2px}
+.menu-icon{position:relative;display:block;width:22px;height:2px;background:currentColor}
+.menu-icon:before,.menu-icon:after{position:absolute;left:0;width:22px;height:2px;background:currentColor;content:""}
+.menu-icon:before{top:-7px}.menu-icon:after{top:7px}
+.app-menu{position:absolute;top:calc(100% + 8px);right:12px;z-index:15;display:grid;width:min(250px,calc(100vw - 44px));gap:6px;padding:6px;background:#181612;border:2px solid #b99b3a;box-shadow:0 4px 0 #8e7427}
+.app-menu[hidden]{display:none!important}
+.top .app-menu-item{display:flex;align-items:center;box-sizing:border-box;width:100%;min-height:48px;padding:0 14px;background:#302b20;color:#f8e6a4;border:1px solid #71602a;text-align:left;text-decoration:none;font:800 13px/1.3 Arial,sans-serif;letter-spacing:.03em;text-transform:uppercase}
+.top .app-menu-item[hidden]{display:none!important}
+.top .app-menu-item:focus-visible{outline:3px solid #f6da5a;outline-offset:2px}
+.top .app-menu-item:hover{background:#413a29;color:#fff1ad}
+.app-menu-version{padding:5px 14px 2px;color:#a99c75;font:600 11px/1.3 Arial,sans-serif;letter-spacing:.03em}
+.app-menu-status{padding:5px 14px 2px;color:#a99c75;font:600 11px/1.45 Arial,sans-serif;letter-spacing:.01em}
+.app-menu-status[data-state="ready"]{color:#c9dc9d}
+.app-menu-status[data-state="offline"]{color:#f2d78a}
+.landing .landing-photo{margin-top:clamp(26px,4vh,48px)}
+/* Match-night responsive layout: readable controls and full team names. */
+.top{justify-content:flex-start}.top .header-logo{display:block;width:52px;height:52px;flex:none}body .app .top .brand{font-family:Arial,sans-serif!important;font-size:clamp(15px,4vw,22px);letter-spacing:.03em;line-height:1.3}
+.setup-actions{display:flex;flex-direction:column}
+@media(max-height:720px){.setup-actions{position:sticky;bottom:0;z-index:2;flex-shrink:0;display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:6px;padding:6px;background:#f4d845}.setup-actions .start,.setup-actions .fullscreen-setup{margin:0;min-height:48px}}
+body .game .team-mini strong{white-space:normal;overflow:visible;overflow-wrap:anywhere;line-height:1.1}
+body .game .team-mini span{font-size:11px}
+@media(max-width:365px){body .game .team-mini strong{font-size:11px}}
+body .game .history-label,body .game .history-action{font-size:11px}
+body .game .history-block{min-height:44px}
+body .game .actions button{min-height:44px}
+body .game .keypad button{min-height:44px}
+body .app .last-score strong{font-size:clamp(21px,7vw,45px);line-height:1.1}
+@media (orientation:portrait){
+  .app .game{overflow-y:auto;overscroll-behavior:contain}
+  .app .game .cards{min-height:220px;flex-shrink:0}
+  .app .game .keypad{min-height:188px;grid-template-rows:repeat(4,minmax(44px,1fr))}
+}
+@media (min-width:900px) and (orientation:landscape){
+  .app{width:min(100%,1400px);max-width:none}
+  .game .team-mini strong{font-size:clamp(16px,1.7vw,22px)}
+  body .game .history-label,body .game .history-action{font-size:13px}
+  .history span{font-size:clamp(16px,1.8vw,22px)}
+}
+@media (min-width:700px){
+  .shade .dialog{width:min(100%,640px)}
+  body .game .actions button{font-size:14px}
+}
+@media (min-width:768px) and (orientation:portrait){
+  .app{width:min(100%,980px)}
+  .app .remaining{font-size:clamp(72px,11vh,128px)}
+  body .app .last-score strong{font-size:clamp(36px,5vh,64px)}
+  .app .history span{font-size:clamp(16px,2.4vh,28px)}
+}
+@media (orientation:landscape) and (max-height:600px){
+  .shade .dialog{width:min(100%,880px);max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px);display:grid;grid-template-columns:minmax(0,1.2fr) minmax(155px,.8fr);grid-template-rows:auto auto auto minmax(0,1fr);gap:4px 14px;padding:10px 12px}
+  .dialog .eyebrow,.dialog h2,.dialog p,.dialog #dialog-content{grid-column:1}
+  .dialog h2{margin:2px 0}.dialog p{margin:2px 0 6px}
+  .dialog #dialog-content{min-height:0;overflow-y:auto}
+  .dialog #dialog-actions{grid-column:2;grid-row:1 / 5;margin:0;align-content:center;gap:6px}
+  .dialog #dialog-actions button{min-height:44px}
+}
+
+/* Readable paired-visit reports; scroll the report while actions stay reachable. */
+.leg-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+.leg-report{min-width:0;background:#211d16;border:1px solid #796b47;color:#fff1bf;text-align:left}
+.leg-report .history-leg-title{position:static;margin:0;font-size:clamp(16px,1.7vw,22px)}
+.leg-outcome,.leg-notes{padding:4px 10px;overflow-wrap:anywhere}
+.leg-outcome{font-size:clamp(14px,1.4vw,18px);font-weight:800}
+.leg-notes{font:12px/1.5 Arial,sans-serif!important;color:#e2cfa0}
+.visit-table{width:100%;table-layout:fixed;border-collapse:collapse;font:700 clamp(14px,1.6vw,21px)/1.4 Arial,sans-serif!important;text-align:center}
+.visit-table th,.visit-table td{border:1px solid #655735;padding:8px 3px;overflow-wrap:anywhere}
+.visit-table th:first-child{width:15%;font-size:.75em}
+.visit-table thead,.visit-table tfoot{background:#40351f}
+.visit-table thead th{font-size:.75em}.visit-table .team-column{font-size:.9em}
+.visit-table tbody tr:nth-child(even){background:#2c261b}
+.visit-table .checkout{background:#24563c;color:#e0ffe9;font-weight:900}
+.visit-table .bust{color:#ffb184}.visit-table tfoot{font-size:.75em}
+.game-highlights{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}
+.game-highlights>div{min-width:0;padding:10px;background:#31291c;text-align:left;font:14px/1.5 Arial,sans-serif!important;overflow-wrap:anywhere}
+.game-highlights strong,.game-highlights span{display:block}
+.earlier-game{margin-top:16px}.earlier-game summary{padding:12px;cursor:pointer;font-weight:bold}
+.shade.report-dialog .dialog{width:min(96vw,1440px);max-height:94vh;max-height:94dvh;display:flex;flex-direction:column;gap:4px;padding:clamp(10px,2vw,24px)}
+.shade.report-dialog #dialog-content{min-height:0;overflow:auto;width:100%}
+.shade.report-dialog #dialog-actions{flex-shrink:0;display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.shade.report-dialog #dialog-actions button{flex:1 1 140px;min-height:44px}
+.shade.report-dialog .history-scroll{max-height:none;overflow:visible}
+@media(min-width:1000px) and (orientation:landscape){.leg-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Large tablet landscape: a full-width board, scores beside the keypad. */
+@media (min-width:900px) and (min-height:601px) and (orientation:landscape){
+  .app{width:min(100%,1280px);max-width:none}
+  .app .game{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(340px,.78fr);grid-template-rows:auto auto auto minmax(0,1fr) auto;grid-template-areas:"bar bar" "prog prog" "cards visit" "cards keys" "cards acts";overflow:hidden;gap:8px}
+  .app .scorebar{grid-area:bar}.app .progress{grid-area:prog}
+  .app .cards{grid-area:cards;min-height:0;align-self:stretch}
+  .app .game .cards .card{height:100%;min-height:0;justify-content:space-evenly;gap:clamp(4px,.6vh,8px)}
+  .app .visit{grid-area:visit}.app .keypad{grid-area:keys;min-height:200px;flex-shrink:0;max-height:none;grid-template-rows:repeat(4,minmax(44px,1fr))}.app .actions{grid-area:acts}
+  body .app .visit-submit{padding:8px clamp(10px,1.2vw,18px)}
+  .app .game .cards .remaining{font-size:clamp(72px,12vh,150px);line-height:1.05;white-space:nowrap}
+  body .app .game .cards .last-score strong{font-size:clamp(36px,5vh,72px)}
+  .app .game .cards .history span{font-size:clamp(18px,3vh,36px);padding:clamp(4px,.8vh,10px) 0}
+  body .app .game .cards .stats b{font-size:clamp(20px,3vh,40px)}
+  .game .team-mini strong{font-size:clamp(16px,1.7vw,22px)}
+}
+
+/* 11-inch tablets: scale type with the short side. Phones (short side ≤430px) stay put. */
+:root{--s:clamp(1, calc(1 + (100vmin - 430px) / 370px), 2.2)}
+@media (min-width:700px) and (min-height:650px){
+  .landing,.setup{overflow-y:auto;min-height:0}
+  .setup{width:min(92vw,900px)}
+  body .setup h1{font-size:max(48px,calc(27px * var(--s)))!important}
+  body .setup .field,body .setup .settings-title,body .setting>span,body .field input,body .field select,body .setting select{font-size:max(22px,calc(12px * var(--s)))!important}
+  .field input,.setting select{min-height:48px}
+  .format-grid{grid-template-columns:1.6fr 1fr}
+  .setup .start,#fullscreen{min-height:56px;flex-shrink:0;font-size:max(18px,calc(14px * var(--s)))}
+  .install-actions button{min-height:48px;font-size:16px}
+  .community-links a{display:inline-flex;align-items:center;min-height:44px;font-size:16px;padding:8px 4px}
+  .card{container-type:inline-size}
+  body .app .game .card.active{box-shadow:none}
+  .app .game .cards .remaining{font-size:clamp(56px,12vh,128px);line-height:1;white-space:nowrap}
+  @supports (font-size:1cqw){.app .game .cards .remaining{font-size:clamp(48px,min(30cqw,18dvh),180px)}}
+  #mini0,#mini1{font-size:max(36px,calc(17px * var(--s)));white-space:normal;overflow-wrap:anywhere}
+  @media (orientation:portrait){#mini0,#mini1{font-size:max(40px,calc(17px * var(--s)))}}
+  .team-mini span,.last-score span,.history-label,.history-action,.stats span,.visit-heading{font-size:clamp(12px,1.4vw,18px)!important}
+  .turn,.card .turn,.card.active .turn{font-size:clamp(12px,1.6vw,18px)!important;min-height:30px}
+  #game-label{font-size:clamp(14px,1.8vw,24px)!important;white-space:normal}
+  #fixture-label{font-size:clamp(12px,1.4vw,18px)!important}
+  .fixture-score b{font-size:max(48px,calc(27px * var(--s)))}
+  .stats b{font-size:clamp(18px,2.1vw,28px)!important}
+  .history span{font-size:clamp(14px,2vw,24px)}
+  #preview{font-size:clamp(14px,1.6vw,20px)!important}
+  #enter-score{font-size:clamp(15px,1.8vw,20px)!important;min-height:56px;padding:8px clamp(10px,1.2vw,18px)}
+  .keypad .soft,#undo{font-size:clamp(13px,1.5vw,18px)!important}
+  .actions button{font-size:clamp(13px,1.5vw,18px)!important}
+  .visit-table{font-size:max(22px,calc(14px * var(--s)))!important}
+  .visit-table th,.visit-table th:first-child,.visit-table thead th{font-size:max(18px,calc(12px * var(--s)))!important}
+  .visit-table .team-column{font-size:max(20px,calc(16px * var(--s)))!important}
+  .visit-table tbody tr{min-height:44px}
+  .history-leg-title{font-size:max(24px,calc(16px * var(--s)))!important}
+  .history-scroll .leg-outcome,.history-scroll .leg-notes,.history-scroll .game-highlights,.history-scroll .game-highlights strong,.history-scroll .game-highlights span{color:#f6e7a8}
+  .dialog .eyebrow{font-size:max(18px,calc(10px * var(--s)))}
+  .dialog h2{font-size:max(40px,calc(23px * var(--s)))}
+  .dialog p{font-size:max(18px,calc(12px * var(--s)))}
+  .dialog-actions button{font-size:max(20px,calc(13px * var(--s)));min-height:56px}
+  .starter-pick button{font-size:max(24px,calc(13px * var(--s)));min-height:56px}
+  .result-team{font-size:max(24px,calc(16px * var(--s)))}
+  .result-label,.final-line{font-size:max(18px,calc(12px * var(--s)))}
+  .app .game .cards{flex:0 0 auto;min-height:clamp(260px,42vh,480px)}
+}
+</style>
+<style>
+/* V1.1 cabinet finish: shared material and control tokens; no layout changes. */
+:root{
+  --cabinet-board:#F1D441;
+  --cabinet-frame:#171612;
+  --cabinet-display:#100F0E;
+  --cabinet-led:#F04A38;
+  --cabinet-control:#B72E29;
+  --cabinet-trim:#A88921;
+}
+.app{
+  background:var(--cabinet-board);
+  border-color:var(--cabinet-frame);
+  box-shadow:inset 0 0 0 2px var(--cabinet-trim),inset 0 1px 0 #fff5ad,0 8px 24px #000a;
+}
+.top{
+  background:var(--cabinet-frame);
+  border-bottom-color:var(--cabinet-trim);
+  box-shadow:inset 0 1px 0 #ffffff12,0 2px 0 #0b0a08;
+}
+.app-menu{
+  border-color:var(--cabinet-trim);
+  box-shadow:0 5px 0 #100f0c,0 12px 24px #0009,inset 0 1px 0 #fff2a030;
+}
+.top .app-menu-item{
+  border-color:#77632d;
+  box-shadow:inset 0 1px 0 #ffffff10;
+}
+.scorebar{
+  background:linear-gradient(180deg,#f3d645 0%,#eacc39 100%);
+  border-bottom-color:#4a3d24;
+  box-shadow:inset 0 1px 0 #fff4ae8c;
+}
+.fixture-score{
+  background:var(--cabinet-display);
+  border-color:#55432b #31271b #31271b #55432b;
+  box-shadow:inset 0 1px 0 #ffffff16,0 1px 0 #a98a2c;
+  color:var(--cabinet-led);
+  text-shadow:0 0 6px #f04a3880;
+}
+.card.active{
+  border-color:var(--cabinet-control);
+  box-shadow:inset 0 0 0 1px #fff1a52e;
+}
+.remaining{
+  background:var(--cabinet-display);
+  border-color:#51412b #2a2117 #2a2117 #51412b;
+  box-shadow:inset 0 1px 0 #ffffff16,inset 0 -8px 14px #0008,0 2px 0 var(--cabinet-trim);
+  color:var(--cabinet-led);
+  text-shadow:0 0 5px #f04a3880;
+}
+.last-score strong,.stats b{
+  background:var(--cabinet-display);
+  color:var(--cabinet-led);
+  box-shadow:inset 0 1px 0 #ffffff12;
+}
+.game .visit-entry{
+  background:var(--cabinet-display);
+  border-color:#65502f #382d20 #382d20 #65502f;
+  box-shadow:inset 0 1px 0 #ffffff12;
+}
+.primary,.actions .primary{
+  background:linear-gradient(180deg,#c44138 0%,var(--cabinet-control) 100%);
+  border-color:#85231d;
+  box-shadow:inset 0 1px 0 #ffb49a,0 2px 0 #741d18;
+}
+.secondary{
+  box-shadow:inset 0 1px 0 #ffffff18,0 2px 0 #18150f;
+}
+.keypad button{
+  background:linear-gradient(180deg,#cf4b41 0%,var(--cabinet-control) 100%);
+  border-color:#e17a66;
+  border-bottom-color:#741d18;
+  box-shadow:inset 0 1px 0 #ffb39c;
+  transition:background-color .12s,box-shadow .08s,transform .08s;
+}
+.keypad button:active{
+  background:#c34239;
+  border-bottom-width:2px;
+  box-shadow:inset 0 2px 5px #76201b;
+  transform:translateY(1px);
+}
+.keypad .soft{
+  background:linear-gradient(180deg,#6b6049 0%,#58503e 100%);
+  border-color:#aaa080;
+  border-bottom-color:#3f382a;
+  box-shadow:inset 0 1px 0 #fff6ca26,0 1px 0 #302b20;
+}
+.keypad .soft:active{
+  background:#756a50;
+  box-shadow:inset 0 2px 5px #302b20;
+}
+.field input,.field select,.setting select{
+  border-color:#614a24;
+  box-shadow:inset 0 1px 2px #c2a54840,inset 0 1px 0 #fff9cc;
+}
+.dialog{
+  border-color:var(--cabinet-frame);
+  box-shadow:0 12px 32px #000a,inset 0 1px 0 #fff5a8;
+}
+.result-board{
+  background:var(--cabinet-display);
+  border-color:#65502f #382d20 #382d20 #65502f;
+  box-shadow:inset 0 1px 0 #ffffff14,inset 0 -8px 16px #0008;
+}
+.history-leg{
+  border-color:#76643b;
+  box-shadow:inset 0 1px 0 #fff2a018;
+}
+.history-leg-title{
+  background:#40351f;
+  box-shadow:inset 0 1px 0 #fff2a026,0 1px 0 #171411;
+}
+.history span{
+  background:#1b1712;
+  box-shadow:inset 0 1px 0 #ffffff0c;
+}
+.history span.latest{
+  background:#a42d25;
+  box-shadow:inset 0 1px 0 #ffb39c55;
+}
+.landing-photo{
+  border:2px solid #806720;
+  box-shadow:0 3px 0 #987b27,0 8px 16px #241b1040;
+}
+.toast{
+  border-color:#b99b3a;
+  box-shadow:0 4px 12px #0007,inset 0 1px 0 #fff2a030;
+}
+@media(prefers-reduced-motion:reduce){
+  .keypad button{transition:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top" id="app-header"><img class="header-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAIAAAB7GkOtAAAK6UlEQVR42u3csQ2EMBBFQWoggFKogID+E+pAFEALIGH8bUaa8BKv2H3ZDfM0AvBDgxEACAAAAgCAAAAgAAAIAAACAIAAACAAAAgAAAIAgAAAIAAACAAAAgCAAAAgAAAIAAACAIAAACAAAAgAAAIAgAAACAAAAgCAAAAgAAAIAAACAIAAACAAAAgAAAIAgAAAIAAACAAAAgCAAAAgAAB0EoBzXwEQAAABEAAAARAAAAEQAAABEAAAARAAAAEQAAABEAAAARAAAAEQAAABEAAAARAAAAEQAAABEAAAARAAAAEQAAABEAAAARAAAAEQAAABEAAAARAAAAEQAAABEAAAAQAQAAEAEAABABAAAQAQAAEAEAABABAAAQAQAAEAEAABABAAAQAQAAEAEAABABAAAQAQAAEAEAABABAAAQAQAAEAEAABABAAAQAQAAEAEAABABAAAQAQAAEAEAAAARAAAAEQAAABEAAAARAAAAEQAAABEAAAARAAAAEQAAABEAAAARAAAAEQAAABEAAAARAAAAEQAAABEAAAARAAAAEQAAABEAAAARAAAAEQAAABEAAAARAAAAEQAAABABAAAQAQAAEAEAABABAAAQAQAAEAEAABABAAAQAQAAEAEAABABAAAQAQAAEAEAABABAAAQAQAAEAEAABABAAAQAQAAEAEAABABAAAQAQAAEAEAABABAAAQAQAAABEAAAARAAAAEQAAABEAAAARAAAAEQAAABEAAAARAAAAEQAAABEAAAARAAAAEQAAABEAAAAegsABWfCbRIAMwXEAABMF9AAATAfAEBEADzBQRAAMwXEAABMF9AAARAAAABEAABAARAAAQAEAABEABAAARAAAABEAABAARAAAQAcKAEQAAAB0oABABwoARAAAAHSgAEAHCgBEAAAAdKAAQAcKAEAMCBEgAAATBfAAEwXwABMF9AAATAfAEBEADzBQRAAMwXEAABMF9AAATAfAEBEADzBQRAAAQAEAABEABAAARAAAABEAABAARAAAQAEAABEADAgRIAAQAcKAEQAMCBEgABABwoARAAwIESAAEAHCgBEADAgRIAHzTgQAkAgAMlAAACYL4FHdvSlsBtNEMcKAEQAAEwQxwoARAAATBDHCgBEAABMEMcKAEQAAEwQxwoARAAATBDHCgBcLwEwAxxoATA8RIAAcCBEgDHSwAEAAEwX8dLAAQAATBfx0sABAABMF/HSwAEQAAEwHyfHiPH68UBdjBDzfj+mxEAARAAARAAARAAARAAARAAARAAARAAARAAARAAARAAARAAARAAARAAARAAARAAARAAARAAARAAAYj4Fi2zJ/tmBEAABMAye7JvRgAEQAAssyf7ZgRAAATAMnuyb8aBEgABsMye7JsRAAEQAMvsyQYoAAJgmV1DTzZAARAAy+waerIBCoAAWGbX0JMNUAAEwDK7hp5sgAIgAJbZNfRkAxQAAbDMrqEnC4AACIBlNkBPFgABMF/LbICeLAACIACW2QA9WQAEQAAsswF6sgAIgABYZgP0ZAEQAAHAAH0zAiAAAoAA+GYEQAAEwDILgG9GAARAACyzAPhmBEAABMAyCwACIAACYJkFAAEQAAGwzJ6MAAiAAFhmT/bNCIAACIBl9mTfjAAIgABYZk/2zQiAAAiAZfZk34wDJQACYJk92QAFQAAEwDJ7sgEKgABYZtfQkw1QAATAMruGnmyAAiAAltk19GQDFAABsMyuoScboAAIgGV2DT1ZAARAACyza+jJAiAA5muZDdCTBUAABMAyG6AnC4AACIBlNkBPFgABEADLbICeLAACIACW1gB9MwIgAAKAAPhmBEAABAAB8M0IgAAIgGUWAN+MAAhA7wG48/sorqEnG6AACIAAuIaeLAACIAAC4Bp6sgAIgPmW+HZ/FQDIJwDmKwAgAAJgvgIAAiAA5isAIAACYL4CAAIgAOYrACAAAmC+AgACIAACIAAgAAIgAAIAAiAAAiAAIAACIAACAAIgAAKQGoDXm+G/gHQ3f4ACIAACIAACIAACIAACIAACIAACYL52TwAEQAAEwHztngB4sgAIgPnaPdfQkwVAAMzX7rmGniwAAiAAds81FAABEAABsHsCIAACIAACIAACIAACIAACIAACIAACIAACIAACgAAIgAAIgBkiAAIgAAJghgiAAAiAAJihj1AABEAABMD98hEKgAAIgAC4Xz5CARAAARAA98tH6EAJgAAIgAAYoAMlAAIgAAJggA6UACAAAmCADpQAIAACYIACIAAIgAAYoAAIAAIgAAYoAAKAAAiAAAiAANg9ARAAARAA87V7AiAAAiAA5mv3BMCTBUAAzNfuCYAnC4AAmK/dcw09WQAEwHztnmsoAAIgAAJg9wRAAARAAATA7gmAAAiAAAiAAAiAAAiAAAiAAAiAAAiAAAiAAAgAAiAAAiAAZogACIAACIAZ+ggFQAAEQADM0EcoAAIgAALgfvkIBUAABEAA3C8foQMlAAIgAO6Xj9CBEgABEAABMEAHSgCskAAIgAE6UAKAAAiAATpQAoAACIABCoAAIAACYIACIAAIgAAIgAAIwGffbpTAAJihAAiAAAiAAJihAAiAAAiAAAiAAAiAAAiAAAiAADhQAiAAAiAAAuBACYAACIAACIADJQACIAACIAAOlAAIQJOXyAxxoARAAATADHGgBEAABMAMcaAEQAAEwAxxoARAAATADHGgBEAABMAMcaAEwPESADPEgRIAx0sABAAHSgAcLwEQAATAfB0vARAABMB8HS8BEAAEwHwBARAA8wUEQADMFxAAATBfQAAEwHwBARAA8wUEQAAEABAAARAAQAAEQAAAARAAAQAEQAAEABAAARAAQAAEQAAAB0oABABwoARAAAAHSgAEAHCgBEAAAAdKAAQAcKAEQAAAB0oAABwoAQAQAPMFEADzBRAA8wUEQADMFxAAATBfQAAEwHwBARAA8wUEQADMFxAAATBfQAAEQAAAARAAAQAEQAAEABAAARAAQAAEQAAAARAAAQAcKAEQAMCBEgABABwoARAAwIESAAEAHCgBEADAgRIAAQAcKAHwQQMOlAAAOFACACAA5gsgAOYLIADmCwiAAJgvIAACYL6AAAiA+QICIADmCwiAAATOFyCWAAAIgAAACIAAAAiAAAAIgAAACIAAAAiAAAAIgAAACIAAAAiAAAAIgAAACIAAAAiAAAAIgAAACIAAAAiAAAAIgAAACIAAAAiAAAAIgAAACIAAAAiAAAAIgAAACACAAAgAgAAIAIAACACAAAgAgAAIAIAACACAAAgAgAAIAIAACACAAAgAgAAIAIAACACAAAgAgAAIAIAACACAAAgAgAAIAIAACACAAAgAgAAIAIAACACAAAgAgAAACIAAAAiAAAAIgAAACIAAAAiAAAAIgAAACIAAAAiAAAAIgAAACIAAAAiAAAAIgAAACIAAAAiAAAAIgAAACIAAAAiAAAAIgAAACIAAAAiAAAAIgAAACIAAAAiAAAAIAIAACACAAAgAgAAIAIAACACAAAgAgAAIAIAACACAAAgAgAAIAIAACACAAFQOAAAVCQCAAAAgAAAIAAACAIAAACAAAAgAAAIAgAAAIAAACAAAAgCAAAAgAAAIAAACAIAAACAAAAgAAAIAgAAAIAAACACAAAAgAAAIAAACAIAAACAAAAgAAAIAgAAAIAAACAAAAgCAAAAgAAAIAACFXDNmj2H8RUsrAAAAAElFTkSuQmCC" alt="Retro Darts Scorer 501 logo" width="120" height="120"><div class="brand">Retro Darts Scorer</div>
+  <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="app-menu"><span class="menu-icon" aria-hidden="true"></span></button>
+  <nav class="app-menu" id="app-menu" aria-label="App menu" hidden>
+    <button class="app-menu-item" id="install-pwa" type="button">Install app</button>
+    <button class="app-menu-item" id="open-archive" type="button">Match history</button>
+    <a class="app-menu-item" id="privacy-policy-link" href="https://retrodarts.com/privacy/">Privacy policy</a>
+    <a class="app-menu-item" id="support-email-link" href="mailto:support@retrodarts.com">support@retrodarts.com</a>
+    <small class="app-menu-status" id="pwa-status" role="status" aria-live="polite">Checking offline availability…</small>
+    <small class="app-menu-version">Version 1.1.0</small>
+  </nav></header>
+  <main id="landing" class="screen setup landing" hidden>
+    <p class="lede">The classic pub scoreboard, ready for match night.</p>
+    <button class="primary start" id="get-started" type="button">Start a match</button>
+    <img class="landing-photo" src="./assets/pub-wall-hero.webp" width="1513" height="1039" alt="A pub marker using Retro Darts Scorer on a wall-mounted tablet">
+  </main>
+  <main id="setup" class="screen setup" hidden>
+    <div class="eyebrow">Match setup</div><h1>Start a fixture</h1>
+
+    <div class="team-grid">
+      <label class="field">Home team<input id="team0" maxlength="28" placeholder="Wheatsheaf B" autocomplete="off"></label>
+      <label class="field">Away team<input id="team1" maxlength="28" placeholder="George and Dragon" autocomplete="off"></label>
+    </div>
+    <div class="settings-title">Game rules</div>
+    <div class="setting"><span>Starting score</span><select id="start-score"><option selected>301</option><option>501</option></select></div>
+    <div class="settings-title">Fixture</div>
+    <div class="setting"><span>Games</span><div class="format-grid"><select id="game-mode" aria-label="Fixture format"><option value="all" selected>PLAY ALL · LEAGUE</option><option value="best">BEST OF</option><option value="first">FIRST TO</option></select><select id="game-count" aria-label="Number of games"></select></div></div>
+    <div class="setting"><span>Legs per game</span><div class="format-grid"><select id="leg-mode" aria-label="Game format"><option value="best" selected>BEST OF</option><option value="first">FIRST TO</option></select><select id="leg-count" aria-label="Number of legs"></select></div></div>
+    <div class="setup-actions"><button class="primary start" id="start-match" type="button">Start match</button>
+    <button class="secondary fullscreen-setup" id="fullscreen" type="button">Go full screen</button></div>
+  </main>
+  <main id="game" class="screen game" hidden>
+    <div class="scorebar"><div class="team-mini"><strong id="mini0"></strong><span>HOME</span></div><div class="fixture-score"><b id="games0">0</b><i>–</i><b id="games1">0</b></div><div class="team-mini"><strong id="mini1"></strong><span>AWAY</span></div></div>
+    <div class="progress"><span id="fixture-label">BEST OF 8 GAMES</span><strong id="game-label">GAME 1 · LEG 1</strong></div>
+    <div class="cards">
+      <article class="card active" id="card0"><div class="turn" id="turn0" role="status" aria-live="polite">THROWING</div><div class="remaining" id="remaining0">501</div><div class="last-score"><span>LAST<br>SCORE</span><strong id="last0">—</strong></div><button type="button" class="history-block" id="open-history0" aria-label="View all visits from every leg of this game"><span class="history-heading"><span class="history-label">LAST 5 VISITS</span><span class="history-action">VIEW ALL ›</span></span><span class="history" id="history0" aria-label="Last five visits"></span></button><div class="stats"><div><span>LEGS</span><b id="legs0">0</b></div><div><span>AVG / VISIT</span><b id="avg0">—</b></div></div>
+      </article>
+      <article class="card" id="card1"><div class="turn" id="turn1" role="status" aria-live="polite">WAITING</div><div class="remaining" id="remaining1">501</div><div class="last-score"><span>LAST<br>SCORE</span><strong id="last1">—</strong></div><button type="button" class="history-block" id="open-history1" aria-label="View all visits from every leg of this game"><span class="history-heading"><span class="history-label">LAST 5 VISITS</span><span class="history-action">VIEW ALL ›</span></span><span class="history" id="history1" aria-label="Last five visits"></span></button><div class="stats"><div><span>LEGS</span><b id="legs1">0</b></div><div><span>AVG / VISIT</span><b id="avg1">—</b></div></div>
+      </article>
+    </div>
+    <div class="visit"><div class="visit-entry"><span class="visit-heading">VISIT SCORE</span><div class="visit-readout"><strong id="draft">—</strong><span class="preview" id="preview">Enter score</span></div></div><button class="primary visit-submit" id="enter-score" type="button">SUBMIT</button></div>
+    <div class="keypad" aria-label="Score keypad"><button data-key="1">1</button><button data-key="2">2</button><button data-key="3">3</button><button data-key="4">4</button><button data-key="5">5</button><button data-key="6">6</button><button data-key="7">7</button><button data-key="8">8</button><button data-key="9">9</button><button class="soft" data-key="erase" aria-label="Delete last digit">⌫ DEL</button><button data-key="0">0</button><button class="soft" id="undo" type="button">↶ Undo</button></div>
+    <div class="actions"><button class="secondary" id="new-match" type="button" hidden>New match</button><button class="secondary" id="fullscreen-game" type="button">FULL SCREEN</button></div>
+  </main>
+</div>
+<div id="shade" class="shade" hidden aria-hidden="true"><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title"><div class="eyebrow" id="dialog-kicker"></div><h2 id="dialog-title"></h2><p id="dialog-copy"></p><div id="dialog-content"></div><div id="dialog-actions" class="dialog-actions"></div></section></div>
+<div id="toast" class="toast" hidden role="status" aria-live="polite"></div>
+<div id="restore-warning" class="restore-warning" hidden role="alert">Saved match could not be restored. The stored data has not been changed. Starting a new match will replace it.</div>
+<div id="local-status" class="restore-warning" role="status">Opening saved matches on this device…</div>
+<div id="save-blocker" class="save-blocker" hidden aria-hidden="true"><section class="save-warning" role="alertdialog" aria-modal="true" aria-labelledby="save-title"><h2 id="save-title">Match not saved</h2><p>Scoring is paused because this device could not save the match. Keep this screen open, free up storage or allow browser storage, then try again.</p><button class="primary" id="save-retry" type="button">Try saving again</button><button class="secondary" id="save-pdf" type="button">Download match PDF</button><p>Downloads contain readable team names and scores. Recovery JSON is a separate file and cannot replace the saved match.</p><button class="secondary" id="save-json" type="button">Download recovery JSON</button></section></div>
+<script>
+(() => {
+  'use strict';
+  const KEY='wheatsheaf-team-scorer-v3';
+  const $=id=>document.getElementById(id);
+  let loadWarning='';
+  const localStore=browserStore();
+  let persistenceState='INITIALIZING',recoveryRaw=null;
+  let state=blank(),draft='',modalType='',toastTimer=0,setupOpen=false,transitionBlockedUntil=0;
+  let archiveStatus='idle';
+  function blank(){return {version:3,phase:'setup',undo:[]};}
+  function validFixture(x){return x&&x.version===3&&['choose-starter','live','between-leg','decider-starter','game-result','between-game','complete'].includes(x.phase)&&
+      Array.isArray(x.teams)&&x.teams.length===2&&x.teams.every(t=>t&&typeof t.name==='string'&&Number.isInteger(t.games)&&t.games>=0)&&
+      Array.isArray(x.players)&&x.players.length===2&&x.players.every(p=>p&&Number.isFinite(p.remaining)&&p.remaining>=0&&Number.isFinite(p.legs)&&Number.isFinite(p.points)&&Number.isFinite(p.darts))&&
+      (x.current===0||x.current===1)&&Number.isInteger(x.gameNumber)&&x.gameNumber>0&&Number.isInteger(x.legNumber)&&x.legNumber>0&&
+      (!['game-result','between-game'].includes(x.phase)||x.gameWinner===0||x.gameWinner===1)&&
+      (x.phase!=='between-leg'||x.legWinner===0||x.legWinner===1)&&
+      (!Array.isArray(x.log)||x.log.every(v=>v&&(v.side===0||v.side===1)&&Number.isInteger(v.leg)&&v.leg>0&&Number.isFinite(v.score)&&v.score>=0))&&Array.isArray(x.results)&&x.results.every(r=>r&&Number.isInteger(r.number)&&(r.winner===0||r.winner===1)&&Array.isArray(r.legs)&&r.legs.length===2)&&
+      x.settings&&[301,501].includes(x.settings.startScore)&&Number.isInteger(x.settings.gameCount)&&Number.isInteger(x.settings.legCount);}
+  function load(raw){try{if(raw===undefined)raw=localStorage.getItem(KEY);loadWarning='';if(!raw)return blank();const x=JSON.parse(raw);
+    if(x&&x.version===3&&x.phase==='setup')return blank();
+    if(validFixture(x)){
+      // Existing fixtures used BEST OF to mean play all games; preserve their rules.
+      if(x.settings.gameMode==='best'&&!x.settings.formatVersion)x.settings.gameMode='all';
+      x.settings.formatVersion=2;
+      // Pre-fix undo copies were quadratic in size: keep the match, discard only old undo history.
+      const validUndo=u=>u&&typeof u==='object'&&['live','between-leg','between-game'].includes(u.phase)&&
+        (u.current===0||u.current===1)&&Number.isInteger(u.gameNumber)&&u.gameNumber>0&&Number.isInteger(u.legNumber)&&u.legNumber>0&&
+        Array.isArray(u.games)&&u.games.length===2&&u.games.every(n=>Number.isInteger(n)&&n>=0)&&
+        Array.isArray(u.players)&&u.players.length===2&&u.players.every(p=>p&&['remaining','legs','points','darts'].every(k=>Number.isFinite(p[k])&&p[k]>=0))&&
+        Number.isInteger(u.resultsLength)&&u.resultsLength>=0&&u.resultsLength<=x.results.length&&Number.isInteger(u.logLength)&&u.logLength>=0&&
+        (u.log===undefined||(Array.isArray(u.log)&&u.log.every(v=>v&&(v.side===0||v.side===1)&&Number.isInteger(v.leg)&&v.leg>0&&Number.isFinite(v.score)&&v.score>=0)));
+      if(!Array.isArray(x.undo)||!x.undo.every(validUndo))x.undo=[];
+      if(!Array.isArray(x.log))x.log=[];
+      return x;
+    }loadWarning='Saved match could not be restored.';
+    }catch(e){loadWarning='Saved match could not be restored.';}return blank();}
+  function setOverlay(el,visible){el.hidden=!visible;el.setAttribute('aria-hidden',visible?'false':'true');}
+  function canMutate(){return persistenceState==='READY'&&!archiveBusy;}
+  function localStatus(value){
+    persistenceState=value;
+    const status=$('local-status');if(status){status.hidden=!['INITIALIZING','SAVING'].includes(value);status.textContent=value==='INITIALIZING'?'Opening saved matches on this device…':'Saving on this device…';}
+  }
+  function saveFailure(){localStatus('SAVE_FAILED');setOverlay($('save-blocker'),true);$('save-retry').disabled=false;$('save-retry').textContent='Try saving again';$('save-retry').focus?.();}
+  async function save(){
+    localStatus('SAVING');
+    try{const raw=JSON.stringify(state);await localStore.saveActive(raw);loadWarning='';$('restore-warning').hidden=true;setOverlay($('save-blocker'),false);localStatus('READY');return true;}
+    catch(e){saveFailure();return false;}
+  }
+  async function initialize(){
+    localStatus('INITIALIZING');
+    try{
+      recoveryRaw=await localStore.readActive();if(recoveryRaw!==null&&typeof recoveryRaw!=='string')throw new Error('Invalid local storage response');state=load(recoveryRaw);
+      if(loadWarning)throw new Error('Unreadable saved match');
+      recoveryRaw=null;localStatus('READY');render();
+      if(state.phase==='complete')await retryCompletedArchive();
+    }catch(e){
+      loadWarning='Saved match could not be restored. Its stored data has not been replaced.';localStatus('RECOVERY_REQUIRED');
+      $('restore-warning').hidden=false;setOverlay($('save-blocker'),true);$('save-title').textContent='Saved match needs recovery';$('save-retry').textContent='Try opening saved matches again';
+      $('save-pdf').disabled=true;$('save-json').disabled=recoveryRaw===null;
+    }
+  }
+  async function retrySave(){
+    if(persistenceState==='INITIALIZING'||persistenceState==='SAVING')return;
+    if(persistenceState==='RECOVERY_REQUIRED'){setOverlay($('save-blocker'),false);$('save-title').textContent='Match not saved';$('save-pdf').disabled=false;$('save-json').disabled=false;return initialize();}
+    if(await save()){render();if(state.phase==='complete'&&archiveStatus!=='saved')await retryCompletedArchive();else toast('Match saved');}
+  }
+  // Compact reversible state: retain the visit log only when starting a new game clears it.
+  function snapshot(carryLog=false){
+    state.undo.push({phase:state.phase,gameNumber:state.gameNumber,legNumber:state.legNumber,
+      gameStarter:state.gameStarter,current:state.current,pendingStarter:state.pendingStarter,
+      fixtureFinished:state.fixtureFinished,gameWinner:state.gameWinner,legWinner:state.legWinner,
+      games:state.teams.map(t=>t.games),players:state.players.map(p=>({...p})),
+      resultsLength:state.results.length,logLength:state.log.length,
+      ...(carryLog?{log:state.log.slice()}:{})});
+    if(state.undo.length>100)state.undo.shift();
+  }
+  function undo(){if(!canMutate())return;
+    if(!state.undo.length){toast('Nothing to undo');return;}
+    showDialog('UNDO','Are you sure you want to undo?','This rolls back the last score or match action on this device. You cannot redo it.',null,[['Keep playing','primary',cancelUndo],['Undo last action','secondary',applyUndo]]);
+  }
+  function cancelUndo(){if(state.phase==='live'){closeDialog();$('undo').focus();}else renderDialog();}
+  async function applyUndo(){if(!canMutate()||!state.undo.length)return;
+    closeDialog();
+    const undoingCompletedFixture=state.phase==='complete';
+    const old=state.undo.pop();
+    Object.assign(state,{phase:old.phase,gameNumber:old.gameNumber,legNumber:old.legNumber,
+      gameStarter:old.gameStarter,current:old.current,pendingStarter:old.pendingStarter,
+      fixtureFinished:old.fixtureFinished,gameWinner:old.gameWinner,legWinner:old.legWinner});
+    state.teams.forEach((t,i)=>{t.games=old.games[i];});
+    state.players=old.players;state.results.length=old.resultsLength;
+    state.log=old.log?old.log:state.log.slice(Math.max(0,state.log.length-old.logLength));
+    if(undoingCompletedFixture){try{state.fixtureId=secureFixtureId();}catch(e){state.fixtureId=null;}archiveStatus='idle';}
+    draft='';if(await save()){render();toast('Last action undone');}
+  }
+  function mode(id){return $(id).value;}
+  function targetLegs(){const s=state.settings;return s.legMode==='best'?Math.floor(s.legCount/2)+1:s.legCount;}
+  function fixtureText(){const c=state.settings.gameCount,g=c===1?'GAME':'GAMES';return (state.settings.gameMode==='all'?'LEAGUE · ALL ':state.settings.gameMode==='best'?'BEST OF ':'FIRST TO ')+c+' '+g;}
+  function legText(){return (state.settings.legMode==='best'?'BEST OF ':'FIRST TO ')+state.settings.legCount+' LEGS';}
+  function resetLeg(starter=null){state.players.forEach(p=>{p.remaining=state.settings.startScore;p.lastScore=null;});state.current=starter===0||starter===1?starter:state.gameStarter^((state.legNumber-1)%2);}
+  function newSide(settings=state.settings){return {remaining:settings.startScore,legs:0,points:0,darts:0,lastScore:null};}
+  function requestPersistentStorage(){try{const result=navigator.storage?.persist?.();if(result&&typeof result.catch==='function')void result.catch(()=>false);}catch(e){}}
+  async function startMatch(){if(!canMutate())return;
+    const names=[$('team0').value.trim(),$('team1').value.trim()];if(names.some(n=>!n)){toast('Enter both team names');return;}
+    requestPersistentStorage();
+    const settings={startScore:Number($('start-score').value),formatVersion:2,gameMode:mode('game-mode'),gameCount:Number($('game-count').value),legMode:mode('leg-mode'),legCount:Number($('leg-count').value)};
+    state={version:3,phase:'choose-starter',settings,teams:names.map(name=>({name,games:0})),players:[newSide(settings),newSide(settings)],gameNumber:1,legNumber:1,gameStarter:null,current:0,results:[],log:[],undo:[],gameWinner:null,legWinner:null,pendingStarter:null};
+    try{state.fixtureId=secureFixtureId();}catch(e){}
+    draft='';await save();render();
+  }
+  async function startFirstGame(){if(!canMutate())return;if(state.phase!=='choose-starter')return;if(state.pendingStarter!==0&&state.pendingStarter!==1){toast('Choose who starts first');return;}state.gameStarter=state.pendingStarter;state.phase='live';resetLeg();draft='';await save();render();}
+  function average(p){return p.darts?(p.points*3/p.darts).toFixed(1):'—';}
+  function addVisit(score,bust,darts){state.players[state.current].darts+=darts;state.players[state.current].points+=score;state.players[state.current].lastScore=score;state.log.unshift({game:state.gameNumber,leg:state.legNumber,side:state.current,score:score,bust:!!bust});}
+  function switchSide(){state.current=1-state.current;draft='';}
+  async function record(n,asBust){if(!canMutate())return;
+    if(state.phase!=='live'||!Number.isInteger(n)||n<0||n>180)return;
+    const p=state.players[state.current],after=p.remaining-n;
+    // The marker and checker validate darts; overscores and leaving one are busts.
+    const bust=!!asBust||after<0||after===1;
+    if(!bust&&n>0&&after===0){return finishLeg(n);}
+    snapshot();const scored=bust?0:n;
+    p.remaining-=scored;
+    addVisit(scored,bust,3);
+    switchSide();await save();render();if(bust)toast('Bust · score stays the same');
+  }
+  async function finishLeg(score){if(!canMutate())return;if(state.phase!=='live')return;const side=state.current,p=state.players[side];if(score!==p.remaining)return;snapshot();p.remaining=0;addVisit(score,false,3);state.legWinner=side;draft='';
+    if(++p.legs>=targetLegs()){
+      state.gameWinner=side;state.teams[side].games++;state.results.push({number:state.gameNumber,winner:side,legs:state.players.map(x=>x.legs),averages:state.players.map(average),visits:state.log.slice()});
+      const count=state.settings.gameCount,played=state.results.length,gm=state.settings.gameMode;
+      const finished=gm==='first'?state.teams[side].games>=count:
+        gm==='best'?(state.teams[side].games>count/2||played>=count):played>=count;
+      state.fixtureFinished=finished;state.phase='game-result';state.pendingStarter=null;
+    }else state.phase='between-leg';await save();render();
+  }
+  async function nextLeg(){if(!canMutate())return;if(state.phase!=='between-leg')return;snapshot();state.legNumber++;state.legWinner=null;
+    const decider=state.players.every(p=>p.legs===targetLegs()-1);
+    state.phase=decider?'decider-starter':'live';state.pendingStarter=null;
+    if(!decider)resetLeg();draft='';await save();render();
+  }
+  async function startDecider(){if(!canMutate())return;if(state.phase!=='decider-starter')return;if(state.pendingStarter!==0&&state.pendingStarter!==1){toast('Choose the bull-up winner');return;}
+    const starter=state.pendingStarter;state.phase='live';state.pendingStarter=null;resetLeg(starter);draft='';await save();render();
+  }
+  async function continueAfterResult(){if(!canMutate())return;
+    if(state.phase!=='game-result')return;
+    const finished=state.fixtureFinished===true;
+    state.phase=finished?'complete':'between-game';
+    if(!await save()){render();return;}
+    draft='';
+    if(!finished){render();return;}
+    await retryCompletedArchive();
+  }
+  async function nextGame(){if(!canMutate())return;if(state.phase!=='between-game')return;if(state.pendingStarter!==0&&state.pendingStarter!==1){toast('Choose who starts first');return;}snapshot(true);state.gameNumber++;state.legNumber=1;state.gameStarter=state.pendingStarter;state.legWinner=null;state.gameWinner=null;state.players=[newSide(),newSide()];state.log=[];state.phase='live';resetLeg();draft='';await save();render();}
+  // Match data stays on this device. The PDF includes all retained visits.
+  // Read-only reports: pair each team's nth visit, independent of who started.
+  function reportGame(game,startScore){
+    const report={number:game.number,available:Array.isArray(game.visits),legs:[],highestScore:[null,null],highestCheckout:[null,null]};
+    if(!report.available)return report;
+    for(const visit of game.visits.slice().reverse()){
+      let leg=report.legs.find(l=>l.number===visit.leg);
+      if(!leg){leg={number:visit.leg,starter:visit.side,rows:[],sides:[[],[]],winner:null,checkout:null,stats:[]};report.legs.push(leg);}
+      const side=visit.side,previous=leg.sides[side],left=(previous.length?previous[previous.length-1].left:startScore)-visit.score;
+      const entry={score:visit.score,left,bust:!!visit.bust,checkout:visit.score>0&&left===0};previous.push(entry);
+      report.highestScore[side]=Math.max(report.highestScore[side]??0,visit.score);
+      if(entry.checkout){leg.winner=side;leg.checkout=visit.score;report.highestCheckout[side]=Math.max(report.highestCheckout[side]??0,visit.score);}
+    }
+    report.legs.sort((a,b)=>a.number-b.number);
+    for(const leg of report.legs){
+      for(let i=0;i<Math.max(...leg.sides.map(s=>s.length));i++)leg.rows.push([leg.sides[0][i]||null,leg.sides[1][i]||null]);
+      leg.stats=leg.sides.map(visits=>{const points=visits.reduce((n,v)=>n+v.score,0);return {visits:visits.length,points,average:visits.length?(points/visits.length).toFixed(1):'—'};});
+    }
+    return report;
+  }
+  function fixtureReports(){
+    const games=state.results.map(g=>({...g,visits:g.number===state.gameNumber?state.log:g.visits}));
+    if(!games.some(g=>g.number===state.gameNumber))games.push({number:state.gameNumber,visits:state.log});
+    return games.map(g=>reportGame(g,state.settings.startScore));
+  }
+  function currentReport(){return fixtureReports().find(g=>g.number===state.gameNumber);}
+  function exportLines(){
+    const lines=['RETRO DARTS SCORER - MATCH REPORT'];
+    for(const game of fixtureReports()){
+      lines.push('GAME '+game.number);
+      for(const leg of game.legs){lines.push('LEG '+leg.number);leg.rows.forEach((row,i)=>lines.push((i+1)+' | '+row.map(v=>v?v.score+(v.checkout?' CHECKOUT':v.bust?' BUST':'')+' | '+v.left:'- | -').join(' | ')));}
+    }
+    return lines;
+  }
+  // Local vector PDF tables. A long leg continues with repeated column headings.
+  function buildPdf(){
+    const ascii=s=>String(s).normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^\x20-\x7e]/g,'?');
+    const escape=s=>ascii(s).replace(/([\\()])/g,'\\$1');
+    const pages=[];let ops=[],y=0;
+    const text=(s,x,top,size=12)=>ops.push('0.10 0.09 0.07 rg BT /F1 '+size+' Tf '+x+' '+top+' Td ('+escape(s)+') Tj ET');
+    const box=(x,top,w,h,fill)=>ops.push(fill+' rg '+x+' '+(top-h)+' '+w+' '+h+' re f');
+    const rule=top=>ops.push('0.75 G 32 '+top+' m 810 '+top+' l S');
+    const newPage=game=>{if(ops.length)pages.push(ops.join('\n'));ops=[];text('RETRO DARTS SCORER',32,559,20);text(state.teams[0].name+' v '+state.teams[1].name,32,536,15);text('Fixture '+state.teams[0].games+' - '+state.teams[1].games+' | GAME '+game.number+' | '+state.settings.startScore+' start',32,515);text('Highest score: '+game.highestScore.map((n,i)=>state.teams[i].name+' '+(n??'-')).join(' / '),32,493);text('Highest checkout: '+game.highestCheckout.map((n,i)=>state.teams[i].name+' '+(n??'-')).join(' / '),32,475);y=449;};
+    const tableHead=(leg,continued=false)=>{
+      const winner=leg.winner===null?'In progress':state.teams[leg.winner].name+' won | checkout '+leg.checkout;
+      text('LEG '+leg.number+(continued?' (continued)':'')+' - '+winner,32,y,15);y-=12;
+      box(32,y,778,47,'0.94 0.89 0.70');text('Visit',40,y-30,12);
+      text(state.teams[0].name,90,y-16,13);text(state.teams[1].name,454,y-16,13);
+      ['Scored','Left','Scored','Left'].forEach((s,i)=>text(s,90+182*i,y-36,12));y-=47;rule(y);
+    };
+    for(const game of fixtureReports()){
+      newPage(game);
+      if(!game.available){text('Earlier visit detail is not available for this saved game.',32,y);continue;}
+      if(!game.legs.length){text('No visits recorded yet.',32,y);continue;}
+      for(const leg of game.legs){
+        if(y<170)newPage(game);tableHead(leg);
+        leg.rows.forEach((row,i)=>{
+          if(y<100){newPage(game);tableHead(leg,true);}
+          if(row.some(v=>v&&v.checkout))box(32,y,778,26,'0.83 0.94 0.83');
+          else if(i%2===1)box(32,y,778,26,'0.96 0.96 0.94');
+          text(i+1,42,y-18,13);
+          row.forEach((v,side)=>{const x=90+364*side;text(v?v.score+(v.checkout?' CHECKOUT':v.bust?' BUST':''):'-',x,y-18,13);text(v?v.left:'-',x+182,y-18,13);});
+          y-=26;rule(y);
+        });
+        if(y<110){newPage(game);text('LEG '+leg.number+' - summary',32,y,15);y-=24;}
+        text(leg.winner===null?'Leg in progress':state.teams[leg.winner].name+' won | checkout '+leg.checkout,32,y-16,12);y-=21;
+        leg.stats.forEach((s,i)=>{text(state.teams[i].name+': '+s.visits+' visits | avg/visit '+s.average+' | '+s.points+' points',32,y-19-18*i,12);});
+        text('Darts used: not recorded. Zero counts as a visit; BUST means no deduction.',32,y-56,10);y-=84;
+      }
+    }
+    if(ops.length)pages.push(ops.join('\n'));
+    const objects=[],add=s=>{objects.push(s);};
+    add('<< /Type /Catalog /Pages 2 0 R >>');add('<< /Type /Pages /Kids ['+pages.map((_,i)=>(4+i*2)+' 0 R').join(' ')+'] /Count '+pages.length+' >>');add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+    pages.forEach((page,i)=>{const stream=page+'\nBT /F1 10 Tf 760 20 Td ('+(i+1)+' / '+pages.length+') Tj ET\n';add('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 3 0 R >> >> /Contents '+(5+i*2)+' 0 R >>');add('<< /Length '+stream.length+' >>\nstream\n'+stream+'endstream');});
+    let pdf='%PDF-1.4\n',offsets=[0];objects.forEach((o,i)=>{offsets.push(pdf.length);pdf+=(i+1)+' 0 obj\n'+o+'\nendobj\n';});const xref=pdf.length;pdf+='xref\n0 '+(objects.length+1)+'\n0000000000 65535 f \n';for(let i=1;i<offsets.length;i++)pdf+=String(offsets[i]).padStart(10,'0')+' 00000 n \n';return pdf+'trailer\n<< /Size '+(objects.length+1)+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF\n';
+  }
+  async function downloadPdf(){
+    try{await deliverFile(buildPdf(),'application/pdf','retro-darts-match.pdf');}
+    catch(e){toast('Unable to export PDF on this device');}
+  }
+  // Recovery export is a detached snapshot; it never changes live state or waits in the scoring path.
+  async function buildFixtureExport(source=state){
+    const fixture=JSON.parse(JSON.stringify(source));delete fixture.undo;
+    const bytes=new TextEncoder().encode(JSON.stringify(fixture));
+    const digest=await crypto.subtle.digest('SHA-256',bytes);
+    const checksum='sha256:'+Array.from(new Uint8Array(digest),n=>n.toString(16).padStart(2,'0')).join('');
+    return {format:'retro-darts-fixture',version:1,exportedAt:new Date().toISOString(),checksum,fixture};
+  }
+  async function deliverFile(contents,mime,filename){
+    const blob=new Blob([contents],{type:mime}),url=URL.createObjectURL(blob),link=document.createElement('a');
+    link.href=url;link.download=filename;const container=$('save-blocker').hidden?document.body:$('save-blocker');container.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+  }
+  async function downloadSnapshot(source){
+    try{const bundle=await buildFixtureExport(source);await deliverFile(JSON.stringify(bundle,null,2),'application/json','retro-darts-recovery.json');}
+    catch(e){toast('Unable to export recovery JSON on this device');}
+  }
+  async function downloadRecoveryJson(){
+    if(persistenceState==='RECOVERY_REQUIRED'){
+      try{if(recoveryRaw===null)throw new Error('No readable data');await deliverFile(recoveryRaw,'application/json','retro-darts-unrestored-state.json');}
+      catch(e){toast('Unable to export saved data on this device');}return;
+    }
+    return downloadSnapshot(state);
+  }
+  async function downloadRawArchiveRecord(record){
+    try{await deliverFile(typeof record.rawRecord==='string'?record.rawRecord:JSON.stringify(record,null,2),'application/json','retro-darts-saved-record.json');}
+    catch(e){toast('Unable to export saved record on this device');}
+  }
+  function touchFeedback(event){
+    const button=event.target&&event.target.closest&&event.target.closest('button');
+    if(event.pointerType==='touch'&&button&&!button.disabled&&typeof navigator!=='undefined'&&typeof navigator.vibrate==='function'){
+      try{navigator.vibrate(10);}catch(e){}
+    }
+  }
+  function make(tag,cls,text){const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=String(text);return el;}
+  function button(label,cls,fn){const el=make('button',cls,label);el.type='button';el.addEventListener('click',fn);return el;}
+  function showDialog(kicker,title,copy,content,actions){const next=kicker.toLowerCase();if($('shade').hidden||modalType!==next)transitionBlockedUntil=Date.now()+450;modalType=next;$('dialog-kicker').textContent=kicker;$('dialog-title').textContent=title;$('dialog-copy').textContent=copy;$('dialog-content').replaceChildren();if(content)$('dialog-content').append(content);$('dialog-content').scrollTop=0;const dlgRoot=$('shade').querySelector('.dialog');if(dlgRoot)dlgRoot.scrollTop=0;$('dialog-actions').replaceChildren(...actions.map(a=>button(a[0],a[1],a[2])));$('shade').classList.remove('report-dialog');setOverlay($('shade'),true);const first=$('dialog-actions').querySelector('.primary:not([disabled]),button:not([disabled])');first?.focus();}
+  function closeDialog(){if(!$('shade').hidden)transitionBlockedUntil=Date.now()+450;modalType='';setOverlay($('shade'),false);}
+  function trapDialogFocus(e){if($('shade').hidden||e.key!=='Tab')return;const root=$('shade').querySelector('.dialog');if(!root||!root.contains(e.target))return;const nodes=[...root.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled])')];if(!nodes.length)return;const i=nodes.indexOf(document.activeElement);if(e.shiftKey&&(i<=0)){e.preventDefault();nodes[nodes.length-1].focus();}else if(!e.shiftKey&&(i===nodes.length-1||i<0)){e.preventDefault();nodes[0].focus();}}
+  function dismissDialogOnEscape(){if($('shade').hidden||!$('save-blocker').hidden)return;if(modalType.includes('history')&&state.phase==='live')closeDialog();else if(modalType==='new match')closeDialog();else if(modalType==='undo')cancelUndo();}
+  function guardTransition(event){const blockedBySave=(['INITIALIZING','SAVING','SAVE_FAILED','RECOVERY_REQUIRED'].includes(persistenceState)||archiveBusy||!$('save-blocker').hidden)&&!event.target?.closest?.('#save-blocker');if(blockedBySave||(event.detail!==0&&Date.now()<transitionBlockedUntil)){event.preventDefault();event.stopImmediatePropagation();}}
+  function dialogActions(actions){$('dialog-actions').replaceChildren(...actions.map(a=>button(a[0],a[1],a[2])));}
+  function nextStarterPicker(){const box=make('div','starter-pick');[0,1].forEach(i=>box.append(button((i===0?'HOME · ':'AWAY · ')+state.teams[i].name,state.pendingStarter===i?'selected':'',()=>{if(!canMutate())return;state.pendingStarter=i;Array.from(box.children).forEach((b,n)=>b.classList.toggle('selected',i===n));$('dialog-actions').querySelector('.primary').disabled=false;})));return box;}
+  function resultBoard(){
+    const board=make('div','result-board');
+    board.append(make('div','result-label','FIXTURE SCORE'));
+    const row=make('div','result-row');
+    row.append(make('div','result-team',state.teams[0].name),make('span','result-digit',state.teams[0].games),make('span','result-dash','–'),make('span','result-digit',state.teams[1].games),make('div','result-team',state.teams[1].name));
+    board.append(row,make('div','result-label','GAME '+state.gameNumber+' · LEGS'));
+    const legs=make('div','result-legs');legs.append(make('span','result-digit',state.players[0].legs),make('span','result-dash','–'),make('span','result-digit',state.players[1].legs));board.append(legs,reportHighlights(currentReport()),reportTables(currentReport()));return board;
+  }
+  function finalBoard(){
+    const board=make('div','result-board final-board');
+    board.append(make('div','result-label','FINAL FIXTURE SCORE'));
+    const row=make('div','result-row');
+    row.append(make('div','result-team',state.teams[0].name),make('span','result-digit',state.teams[0].games),make('span','result-dash','–'),make('span','result-digit',state.teams[1].games),make('div','result-team',state.teams[1].name));
+    board.append(row);
+    const review=make('div','final-summary');
+    review.append(make('div','result-label','GAME-BY-GAME RESULTS'));
+    const header=make('div','final-header');
+    header.append(make('span','', 'GAME'),make('span','', 'LEGS'),make('span','', 'WON BY'));
+    review.append(header);
+    const lines=make('div','final-lines');
+    state.results.forEach(r=>{
+      const line=make('div','final-line');
+      line.append(make('span','review-game','GAME '+r.number),make('span','review-legs',r.legs.join('–')),make('strong','review-winner',r.winner===0?'HOME':'AWAY'));
+      lines.append(line);
+    });
+    review.append(lines);
+    const status=make('p','archive-status',archiveStatusText());status.id='archive-status';
+    board.append(review,status);
+    return board;
+  }
+  function reportTables(report,teams=state.teams){
+    const grid=make('div','leg-grid');
+    if(!report.available){grid.append(make('p','history-empty','Earlier visit detail is not available for this saved game.'));return grid;}
+    if(!report.legs.length){grid.append(make('p','history-empty','No visits recorded yet.'));return grid;}
+    for(const leg of report.legs){
+      const section=make('section','leg-report');section.append(make('h3','history-leg-title','LEG '+leg.number));
+      section.append(make('p','leg-outcome',leg.winner===null?'In progress':teams[leg.winner].name+' won · '+leg.stats[leg.winner].visits+' visits · checkout '+leg.checkout));
+      const table=make('table','visit-table'),head=make('thead'),names=make('tr'),visitHead=make('th','','Visit');visitHead.rowSpan=2;visitHead.scope='col';names.append(visitHead);
+      teams.forEach(t=>{const th=make('th','team-column',t.name);th.colSpan=2;th.scope='colgroup';names.append(th);});head.append(names);
+      const labels=make('tr');['Scored','Left','Scored','Left'].forEach(label=>{const th=make('th','',label);th.scope='col';labels.append(th);});head.append(labels);table.append(head);
+      const body=make('tbody');leg.rows.forEach((row,i)=>{const tr=make('tr'),round=make('th','',i+1);round.scope='row';tr.append(round);row.forEach(v=>{const scored=make('td',v?.checkout?'checkout':v?.bust?'bust':'',v?v.score+(v.checkout?' ✓':v.bust?' B':''):'–');if(v?.checkout)scored.title='Checkout';if(v?.bust)scored.title='Bust · no deduction';tr.append(scored,make('td',v?.checkout?'checkout':'',v?v.left:'–'));});body.append(tr);});table.append(body);
+      const foot=make('tfoot'),winnerRow=make('tr'),winnerCell=make('td','',leg.winner===null?'Leg in progress':teams[leg.winner].name+' won · checkout '+leg.checkout);winnerCell.colSpan=5;winnerRow.append(winnerCell);foot.append(winnerRow);const summary=make('tr');summary.append(make('th','','Visits / avg'));
+      leg.stats.forEach(s=>{const cell=make('td','',s.visits+' / '+s.average);cell.colSpan=2;summary.append(cell);});foot.append(summary);table.append(foot);section.append(table);
+      section.append(make('p','leg-notes','Started: '+teams[leg.starter].name+' · Average = points per visit · B = bust · Darts used not recorded'));
+      grid.append(section);
+    }
+    return grid;
+  }
+  function reportHighlights(report,teams=state.teams){
+    const box=make('div','game-highlights');
+    teams.forEach((t,i)=>{const card=make('div');card.append(make('strong','',t.name),make('span','','Highest score: '+(report.highestScore[i]??'–')),make('span','','Highest checkout: '+(report.highestCheckout[i]??'–')));box.append(card);});return box;
+  }
+  function archiveStatusText(){
+    if(archiveStatus==='saving')return 'Saving this completed fixture to this device…';
+    if(archiveStatus==='saved')return 'Saved to Match history on this device.';
+    if(archiveStatus==='failed')return 'The completed fixture is still in the current saved match. Retry the history save before starting another match.';
+    return 'Saving this completed fixture to Match history…';
+  }
+  function updateArchiveStatus(){const status=$('archive-status');if(status)status.textContent=archiveStatusText();}
+  function showHistory(){
+    if(!state.teams||!state.players)return;
+    const scroll=make('div','history-scroll');
+    const report=currentReport();scroll.append(reportHighlights(report),reportTables(report));
+    for(const earlier of fixtureReports().filter(g=>g.number!==state.gameNumber)){
+      const detail=make('details','earlier-game');detail.append(make('summary','','GAME '+earlier.number+' · all visit scores'),reportHighlights(earlier),reportTables(earlier));scroll.append(detail);
+    }
+    showDialog('GAME '+state.gameNumber+' HISTORY','All visit scores','Both teams by visit round. ✓ = checkout; B = bust. Earlier games are available below. Downloads contain readable team names and scores; recovery JSON is a separate file.',scroll,
+      [['Back to scoreboard','primary',()=>{if(state.phase==='live')closeDialog();else renderDialog();}],['Download PDF','secondary',downloadPdf],['Download recovery JSON','secondary',downloadRecoveryJson]]);
+    $('shade').classList.add('report-dialog');
+  }
+  function renderDialog(){
+    if(state.phase==='choose-starter'){const picker=nextStarterPicker();showDialog('GAME 1','Who won the bull-up?','Choose who starts game 1.',picker,[['Start game 1','primary',startFirstGame],['Back to setup','secondary',goToSetup]]);$('dialog-actions').querySelector('.primary').disabled=state.pendingStarter!==0&&state.pendingStarter!==1;}
+    else if(state.phase==='decider-starter'){const picker=nextStarterPicker();showDialog('DECIDING LEG '+state.legNumber,'Who won the re-bull?','Legs tied. Away player bulls first. Choose the winner of the re-bull.',picker,[['Start deciding leg','primary',startDecider],['Undo last leg','secondary',undo]]);$('dialog-actions').querySelector('.primary').disabled=state.pendingStarter!==0&&state.pendingStarter!==1;}
+    else if(state.phase==='between-leg')showDialog('LEG COMPLETE',state.teams[state.legWinner].name+' wins the leg',state.players[0].legs+'–'+state.players[1].legs+' · '+legText(),null,[['Next leg','primary',nextLeg],['Undo finish','secondary',undo],['All visit scores','secondary',showHistory]]);
+    else if(state.phase==='game-result')showDialog('GAME '+state.gameNumber+' COMPLETE',state.teams[state.gameWinner].name+' wins the game','',resultBoard(),[[state.fixtureFinished?'View final result':'Next game','primary',continueAfterResult],['Undo finish','secondary',undo],['All visit scores','secondary',showHistory],['Download PDF','secondary',downloadPdf]]);
+    else if(state.phase==='between-game'){
+      const picker=nextStarterPicker();showDialog('GAME '+(state.gameNumber+1),'Who won the bull-up?',state.teams[state.gameWinner].name+' won game '+state.gameNumber+'. Fixture: '+state.teams[0].games+'–'+state.teams[1].games+'. Choose who starts game '+(state.gameNumber+1)+'.',picker,[['Start game '+(state.gameNumber+1),'primary',nextGame],['Undo finish','secondary',undo]]);$('dialog-actions').querySelector('.primary').disabled=state.pendingStarter!==0&&state.pendingStarter!==1;
+    }else if(state.phase==='complete'){
+      const a=state.teams[0],b=state.teams[1],result=a.games===b.games?'Fixture drawn':(a.games>b.games?a.name:b.name)+' win the fixture';
+      const actions=[['New match','primary',goToSetup],['Undo finish','secondary',undo],['Download PDF','secondary',downloadPdf],['All visit scores','secondary',showHistory],['Download recovery JSON','secondary',downloadRecoveryJson]];
+      if(archiveStatus==='failed')actions.push(['Retry history save','secondary',retryCompletedArchive]);
+      showDialog('FIXTURE COMPLETE',result,(state.results.length===1?'1 game played':state.results.length+' games played')+'. Downloads contain readable team names and scores; recovery JSON is a separate file.',finalBoard(),actions);
+      if(archiveBusy)$('dialog-actions').children[0].disabled=true;
+      if(!canMutate())$('dialog-actions').children[1].disabled=true;
+    }
+    if(state.phase==='game-result')$('shade').classList.add('report-dialog');
+  }
+  function closeAppMenu(restoreFocus=false){
+    const menu=$('app-menu'),toggle=$('menu-toggle');
+    if(!menu.hidden){menu.hidden=true;toggle.setAttribute('aria-expanded','false');toggle.setAttribute('aria-label','Open menu');}
+    if(restoreFocus)toggle.focus();
+  }
+  let deferredInstallPrompt=null;
+  function isInstalledPwa(){return navigator.standalone===true||!!(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches);}
+  async function updatePwaStatus(){
+    const status=$('pwa-status');if(!status)return;
+    const set=(text,state)=>{status.textContent=text;status.dataset.state=state;};
+    if(location.protocol==='file:'||!document.querySelector('link[rel="manifest"]')){$('install-pwa').hidden=true;set('Standalone file · saves in this browser','local');return;}
+    if(isInstalledPwa())$('install-pwa').hidden=true;
+    if(!navigator.onLine){set('Offline now · scores save on this device','offline');return;}
+    if(!('serviceWorker' in navigator)||!('caches' in window)){set('Offline support is unavailable in this browser','unavailable');return;}
+    try{
+      const registration=await navigator.serviceWorker.getRegistration();
+      if(!registration?.active){set('Open once while online to prepare offline use','pending');return;}
+      const shell=await caches.match(new URL('./',registration.scope).href);
+      set(shell?'Offline copy ready · match data stays on this device':'Open once while online to prepare offline use',shell?'ready':'pending');
+    }catch(e){set('Offline copy status is unavailable','unavailable');}
+  }
+  function showInstallInstructions(){
+    const ua=navigator.userAgent||'';
+    const apple=/iPhone|iPad|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+    const copy=apple?'On iPhone or iPad, open this page in Safari, tap Share, then choose Add to Home Screen. Turn on Open as Web App if that option appears.':/Android/i.test(ua)?'Open your browser menu and choose Install app or Add to Home screen. The wording depends on the browser.':'Use the install icon in the address bar or your browser menu to choose Install app. If no install option appears, keep using Retro Darts Scorer in this tab.';
+    showDialog('INSTALL APP','Add Retro Darts Scorer',copy,null,[['Got it','primary',closeDialog]]);
+  }
+  function initPwa(){
+    const install=$('install-pwa');
+    install.addEventListener('click',async()=>{
+      closeAppMenu();
+      const prompt=deferredInstallPrompt;deferredInstallPrompt=null;
+      if(!prompt){showInstallInstructions();return;}
+      try{await prompt.prompt();const choice=await prompt.userChoice;if(choice?.outcome==='accepted')toast('Retro Darts Scorer installed');else toast('Installation cancelled');}
+      catch(e){showInstallInstructions();}
+      updatePwaStatus();
+    });
+    if(location.protocol==='file:'||!document.querySelector('link[rel="manifest"]')){void updatePwaStatus();return;}
+    if(isInstalledPwa())install.hidden=true;
+    window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();deferredInstallPrompt=event;});
+    window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;install.hidden=true;void updatePwaStatus();});
+    window.addEventListener('online',()=>void updatePwaStatus());
+    window.addEventListener('offline',()=>void updatePwaStatus());
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.addEventListener('controllerchange',()=>void updatePwaStatus());
+      window.addEventListener('retro-pwa-ready',()=>void updatePwaStatus());
+      window.addEventListener('load',()=>void updatePwaStatus());
+    }else void updatePwaStatus();
+  }
+  function toggleAppMenu(){
+    const menu=$('app-menu'),toggle=$('menu-toggle'),open=menu.hidden;
+    menu.hidden=!open;toggle.setAttribute('aria-expanded',String(open));toggle.setAttribute('aria-label',open?'Close menu':'Open menu');
+    if(open)menu.querySelector('button,a')?.focus();
+  }
+  function dismissAppMenuOnPointer(event){
+    const menu=$('app-menu'),toggle=$('menu-toggle');
+    if(!menu.hidden&&!menu.contains(event.target)&&!toggle.contains(event.target))closeAppMenu();
+  }
+  function dismissAppMenuOnEscape(event){
+    if(event.key==='Escape'&&!$('app-menu').hidden){event.preventDefault();event.stopImmediatePropagation();closeAppMenu(true);}
+  }
+  function openSetup(){setupOpen=true;render();}
+  function render(){$('restore-warning').hidden=!loadWarning;const playing=state.phase!=='setup';if(playing)closeAppMenu();$('landing').hidden=playing||setupOpen;$('setup').hidden=playing||!setupOpen;$('app-header').hidden=playing;$('game').hidden=!playing;$('new-match').hidden=!playing;if(!playing){closeDialog();return;}
+    $('mini0').textContent=state.teams[0].name;$('mini1').textContent=state.teams[1].name;$('games0').textContent=state.teams[0].games;$('games1').textContent=state.teams[1].games;
+    $('fixture-label').textContent=fixtureText();$('game-label').textContent='GAME '+state.gameNumber+' · LEG '+state.legNumber+' · '+legText();
+    state.players.forEach((p,i)=>{$('card'+i).classList.toggle('active',state.phase==='live'&&state.current===i);$('turn'+i).textContent=state.phase==='live'&&state.current===i?'▶ THROWING NOW':'WAITING';$('remaining'+i).textContent=p.remaining;$('last'+i).textContent=p.lastScore==null?'—':p.lastScore;$('legs'+i).textContent=p.legs;$('avg'+i).textContent=average(p);});
+    state.players.forEach((p,i)=>{const visits=(state.log||[]).filter(v=>v.game===state.gameNumber&&v.leg===state.legNumber&&v.side===i).slice(0,5).reverse();const values=[...Array(5-visits.length).fill('—'),...visits.map(v=>v.score)];$('history'+i).replaceChildren(...values.map((v,n)=>make('span',n===4&&visits.length?'latest':'',v)));});
+    const p=state.players[state.current];$('draft').textContent=draft||'—';$('undo').disabled=!state.undo.length||!canMutate();
+    let preview='Enter score',bad=false;if(draft){
+      const n=Number(draft),after=p.remaining-n;
+      if(n>180){preview='Maximum score is 180';bad=true;}
+      else if(n>p.remaining||after===1){preview='Bust · no deduction';bad=true;}
+      else if(n===p.remaining&&n>0)preview='Wins the leg';
+      else preview='Leaves '+after;
+    }$('preview').textContent=preview;$('preview').classList.toggle('bad',bad);
+    document.querySelectorAll('.keypad [data-key],#enter-score').forEach(b=>b.disabled=state.phase!=='live');
+    if(['choose-starter','between-leg','decider-starter','game-result','between-game','complete'].includes(state.phase))renderDialog();else closeDialog();
+  }
+  function setDigit(d){if(!canMutate())return;if(state.phase!=='live'||draft.length>=3)return;draft=draft==='0'?d:draft+d;render();}
+  function handleKey(key){if(!canMutate())return;
+    if(state.phase!=='live')return;
+    if(key==='erase'){draft=draft.slice(0,-1);render();}
+    else if(/^[0-9]$/.test(key))setDigit(key);
+  }
+  function submit(){if(!canMutate())return;if(!draft){toast('Enter a score');return;}const n=Number(draft);if(n>180){toast('Maximum score is 180');return;}return record(n,false);}
+  function toast(text){clearTimeout(toastTimer);$('toast').textContent=text;$('toast').hidden=false;toastTimer=setTimeout(()=>$('toast').hidden=true,2200);}
+  const ARCHIVE_DB='retro-darts-archive-v1';
+  let archiveBusy=false;
+  function openArchive(){return new Promise((resolve,reject)=>{
+    let request,settled=false;
+    try{request=indexedDB.open(ARCHIVE_DB,1);}catch(e){reject(e);return;}
+    const timer=setTimeout(()=>{if(!settled){settled=true;reject(new Error('Archive timed out'));}},5000);
+    request.onupgradeneeded=()=>{const db=request.result;if(!db.objectStoreNames.contains('fixtures'))db.createObjectStore('fixtures',{keyPath:'id'});};
+    request.onerror=()=>{clearTimeout(timer);settled=true;reject(request.error||new Error('Archive unavailable'));};
+    request.onblocked=()=>{clearTimeout(timer);settled=true;reject(new Error('Archive blocked by another tab'));};
+    request.onsuccess=()=>{const db=request.result;if(settled){db.close();return;}settled=true;clearTimeout(timer);db.onversionchange=()=>db.close();resolve(db);};
+  });}
+  function archiveTransaction(db,mode,operation){return new Promise((resolve,reject)=>{
+    let tx,request;try{tx=db.transaction('fixtures',mode);request=operation(tx.objectStore('fixtures'));}catch(e){reject(e);return;}
+    const timer=setTimeout(()=>{try{tx.abort();}catch(e){}reject(new Error('Archive transaction timed out'));},5000);
+    tx.oncomplete=()=>{clearTimeout(timer);resolve(request.result);};
+    tx.onabort=()=>{clearTimeout(timer);reject(tx.error||new Error('Archive transaction failed'));};
+    tx.onerror=()=>{};
+  });}
+  function secureFixtureId(){
+    if(typeof crypto==='undefined'||typeof crypto.getRandomValues!=='function')throw new Error('Secure identifier unavailable');
+    const bytes=crypto.getRandomValues(new Uint8Array(16));bytes[6]=(bytes[6]&15)|64;bytes[8]=(bytes[8]&63)|128;
+    const hex=Array.from(bytes,n=>n.toString(16).padStart(2,'0')).join('');
+    return hex.slice(0,8)+'-'+hex.slice(8,12)+'-'+hex.slice(12,16)+'-'+hex.slice(16,20)+'-'+hex.slice(20);
+  }
+  async function archiveCompletedFixture(){
+    const originalState=state;
+    if(!state.fixtureId){state.fixtureId=secureFixtureId();if(!await save())throw new Error('Could not save match identifier');}
+    const snapshot=JSON.stringify(state),fixture=JSON.parse(snapshot);delete fixture.undo;
+    const record={id:state.fixtureId,version:1,archivedAt:new Date().toISOString(),fixture};
+    const stored=await localStore.archiveCompleted(record,fixtureSummary(record));
+    const verified=await localStore.readFixture(stored.id);
+    if(!verified||JSON.stringify(verified.fixture)!==JSON.stringify(fixture))throw new Error('Archive verification failed');
+    if(state!==originalState||JSON.stringify(state)!==snapshot)throw new Error('Match changed while saving');
+    return stored;
+  }
+  function fixtureSummary(record){
+    const fixture=record?.fixture,teams=fixture?.teams;
+    const valid=Array.isArray(teams)&&teams.length===2&&teams.every(t=>t&&typeof t.name==='string'&&Number.isFinite(t.games));
+    return {id:record.id,archivedAt:record.archivedAt,teams:valid?teams.map(t=>({name:t.name,games:t.games})):null,complete:valid?(fixture.phase==='complete'||fixture.phase==='game-result'&&fixture.fixtureFinished===true):null,unavailable:!valid};
+  }
+  async function withArchive(operation){const db=await openArchive();try{return await operation(db);}finally{db.close();}}
+  function browserStore(){return {
+    readActive:()=>localStorage.getItem(KEY),saveActive:raw=>localStorage.setItem(KEY,raw),
+    readFixture:id=>withArchive(db=>archiveTransaction(db,'readonly',store=>store.get(id))),
+    archiveCompleted:record=>withArchive(db=>new Promise((resolve,reject)=>{
+      const tx=db.transaction('fixtures','readwrite'),store=tx.objectStore('fixtures');let result=record,conflict=false;
+      const lookup=store.get(record.id);lookup.onsuccess=()=>{
+        if(lookup.result){if(JSON.stringify(lookup.result.fixture)!==JSON.stringify(record.fixture)){conflict=true;tx.abort();}else result=lookup.result;}
+        else store.add(record);
+      };
+      const timer=setTimeout(()=>{try{tx.abort();}catch(e){}reject(new Error('Archive timed out'));},5000);
+      tx.oncomplete=()=>{clearTimeout(timer);resolve(result);};tx.onabort=()=>{clearTimeout(timer);reject(new Error(conflict?'Archive content conflict':'Archive write failed'));};tx.onerror=()=>{};
+    })),
+    pageFixtures:before=>withArchive(async db=>{const page=await archivePage(db,before);return {summaries:page.records.map(fixtureSummary),more:page.more,last:page.last};}),
+    deleteFixture:record=>withArchive(db=>deleteArchiveRecord(db,record))
+  };}
+  function archivePage(db,before){return new Promise((resolve,reject)=>{
+    let tx,request;const records=[];let more=false,last=null;
+    try{tx=db.transaction('fixtures','readonly');request=tx.objectStore('fixtures').openCursor(before?IDBKeyRange.upperBound(before,true):null,'prev');}catch(e){reject(e);return;}
+    const timer=setTimeout(()=>{try{tx.abort();}catch(e){}reject(new Error('Archive timed out'));},5000);
+    request.onsuccess=()=>{const cursor=request.result;if(!cursor)return;if(records.length===20){more=true;return;}records.push(cursor.value);last=cursor.primaryKey;cursor.continue();};
+    tx.oncomplete=()=>{clearTimeout(timer);resolve({records,more,last});};
+    tx.onabort=()=>{clearTimeout(timer);reject(tx.error||new Error('Archive unavailable'));};tx.onerror=()=>{};
+  });}
+  async function showArchive(){
+    try{
+      const content=make('div','history-scroll');let before=null,busy=false;
+      const moreButton=button('Load more','secondary',loadMore);
+      async function loadMore(){
+        if(busy)return;busy=true;moreButton.disabled=true;
+        try{
+          const page=await localStore.pageFixtures(before);before=page.last;moreButton.remove();
+          if(!page.summaries.length&&!content.children.length)content.append(make('p','history-empty','No completed fixtures saved on this device yet.'));
+          for(const summary of page.summaries){
+            const valid=Array.isArray(summary.teams)&&summary.teams.length===2;
+            const detail=make('details','earlier-game');
+            const title=valid?summary.teams[0].name+' '+summary.teams[0].games+'–'+summary.teams[1].games+' '+summary.teams[1].name+(summary.complete?'':' · In progress'):'Saved fixture unavailable';
+            detail.append(make('summary','',title));let rendered=false;
+            detail.addEventListener('toggle',async()=>{if(!detail.open||rendered)return;rendered=true;let malformed=!valid,record,fixture;
+              try{
+                record=await localStore.readFixture(summary.id);fixture=record?.fixture;
+                if(!valid||!fixture||!fixture.settings||!Array.isArray(fixture.results))throw new Error('Invalid fixture');
+                if(record.imported)detail.append(make('p','leg-notes','Imported data is unverified and cannot yet be resumed.'));
+                const visits=[...(fixture.log||[]),...fixture.results.flatMap(g=>Array.isArray(g.visits)?g.visits:[])];
+                if(visits.some(v=>v&&v.bust===undefined))detail.append(make('p','leg-notes','Some older visits do not record whether they were busts.'));
+                const games=fixture.results.map(g=>({...g,visits:g.number===fixture.gameNumber?fixture.log:g.visits}));
+                if(!games.some(g=>g.number===fixture.gameNumber)&&Array.isArray(fixture.log))games.push({number:fixture.gameNumber,visits:fixture.log});
+                for(const game of games){
+                  if(Array.isArray(game.visits)&&game.visits.some(v=>!v||(v.side!==0&&v.side!==1)))throw new Error('Invalid visit');
+                  const gameDetails=make('details','earlier-game');gameDetails.append(make('summary','','GAME '+game.number));let gameRendered=false;
+                  gameDetails.addEventListener('toggle',()=>{if(!gameDetails.open||gameRendered)return;gameRendered=true;
+                    try{const report=reportGame(game,fixture.settings.startScore);gameDetails.append(reportHighlights(report,fixture.teams),reportTables(report,fixture.teams));}
+                    catch(e){gameDetails.append(make('p','history-empty','This game could not be displayed; its saved data has not been deleted.'));}
+                  });detail.append(gameDetails);
+                }
+              }catch(e){malformed=true;detail.append(make('p','history-empty','This fixture could not be displayed; it has not been deleted.'));}
+              if(!record){detail.append(make('p','history-empty','Could not read this record. Close and reopen history to retry.'));return;}
+              if(malformed)detail.append(button('Download saved record JSON','secondary',()=>downloadRawArchiveRecord(record)));
+              else detail.append(button('Download recovery JSON','secondary',()=>downloadSnapshot(fixture)));
+              detail.append(button('Delete saved fixture','secondary',()=>confirmArchiveDelete(record)));
+            });
+            content.append(detail);
+          }
+          if(page.more){moreButton.disabled=false;content.append(moreButton);}
+        }catch(e){moreButton.remove();content.append(make('p','history-empty','Could not load more history. Saved records have not been deleted.'));}
+        finally{busy=false;}
+      }
+      await loadMore();
+      showDialog('SAVED ON THIS DEVICE','Match history','Completed fixtures are stored in this browser. Clearing browser data can remove them; download a copy to keep one elsewhere.',content,[['Back','primary',()=>{closeDialog();render();}]]);$('shade').classList.add('report-dialog');
+    }catch(e){showDialog('MATCH HISTORY','Could not open match history','Your current match has not been changed.',null,[['Back','primary',()=>{closeDialog();render();}]]);}
+  }
+  function deleteArchiveRecord(db,record){return new Promise((resolve,reject)=>{
+    let tx;try{tx=db.transaction('fixtures','readwrite');}catch(e){reject(e);return;}
+    tx.objectStore('fixtures').delete(record.id);
+    const timer=setTimeout(()=>{try{tx.abort();}catch(e){}reject(new Error('Delete timed out'));},5000);
+    tx.oncomplete=()=>{clearTimeout(timer);resolve();};tx.onabort=()=>{clearTimeout(timer);reject(tx.error||new Error('Delete failed'));};tx.onerror=()=>{};
+  });}
+  function confirmArchiveDelete(record){
+    showDialog('MATCH HISTORY','Delete saved fixture?','This permanently deletes this saved fixture from this device. Download it first if you want to keep a copy.',null,[['Keep fixture','primary',showArchive],['Delete fixture','secondary',async()=>{
+      try{await localStore.deleteFixture(record);await showArchive();}
+      catch(e){showDialog('MATCH HISTORY','Could not delete saved fixture','Your saved fixture has not been deleted.',null,[['Back','primary',showArchive]]);}
+    }]]);
+  }
+  async function retryCompletedArchive(){
+    if(state.phase!=='complete'||archiveBusy||!['READY','ARCHIVE_FAILED'].includes(persistenceState))return;
+    archiveStatus='saving';archiveBusy=true;localStatus('ARCHIVING');render();
+    try{await archiveCompletedFixture();archiveStatus='saved';localStatus('READY');}
+    catch(e){archiveStatus='failed';if(persistenceState!=='SAVE_FAILED')localStatus('ARCHIVE_FAILED');}finally{archiveBusy=false;render();}
+  }
+  async function finishGoToSetup(){if(!canMutate())return;setupOpen=true;const old=state;if(old.teams){$('team0').value=old.teams[0].name;$('team1').value=old.teams[1].name;}closeDialog();state=blank();draft='';archiveStatus='idle';await save();render();}
+  async function goToSetup(){if(!canMutate()&&persistenceState!=='ARCHIVE_FAILED')return;
+    if(state.phase!=='complete'&&!(state.phase==='game-result'&&state.fixtureFinished))return finishGoToSetup();
+    if(archiveBusy)return;archiveBusy=true;localStatus('ARCHIVING');
+    showDialog('MATCH HISTORY','Saving match history','Keep this screen open while the fixture is saved.',null,[]);
+    try{await archiveCompletedFixture();archiveBusy=false;localStatus('READY');await finishGoToSetup();}
+    catch(e){archiveBusy=false;if(persistenceState!=='SAVE_FAILED')localStatus('ARCHIVE_FAILED');showDialog('MATCH HISTORY','Could not save match history','The current fixture has not been cleared. Check device storage and try again. You can also download a PDF or recovery JSON.',null,[['Try again','primary',goToSetup],['Keep match','secondary',render],['Manage match history','secondary',showArchive],['Download PDF','secondary',downloadPdf],['Download recovery JSON','secondary',downloadRecoveryJson]]);}
+
+  }
+  function resetConfirm(){showDialog('NEW MATCH','Start a new match?','This clears the current fixture on this device.',null,[['Start new match','primary',goToSetup],['Keep playing','secondary',()=>{closeDialog();render();}]]);}
+  function updateFullscreenButtons(){const on=!!document.fullscreenElement;$('fullscreen').textContent=on?'Exit full screen':'Go full screen';$('fullscreen-game').textContent=on?'EXIT FULL SCREEN':'FULL SCREEN';}
+  async function toggleFullscreen(){const shell=document.documentElement;
+    try{
+      if(document.fullscreenElement&&document.exitFullscreen)await document.exitFullscreen();
+      else if(document.fullscreenEnabled!==false&&shell&&shell.requestFullscreen)await shell.requestFullscreen();
+      else{toast('Full screen is unavailable here');return;}
+    }catch(e){toast('Fullscreen unavailable');}
+    updateFullscreenButtons();
+  }
+  function fillSelect(id,values,selected){const el=$(id);el.replaceChildren();values.forEach(v=>{const o=document.createElement('option');o.value=String(v);o.textContent=String(v);el.append(o);});el.value=String(selected);}
+  function syncCounts(){const lm=mode('leg-mode'),oldG=Number($('game-count').value)||8,oldL=Number($('leg-count').value)||3;fillSelect('game-count',[1,2,3,4,5,6,7,8],oldG);fillSelect('leg-count',lm==='best'?[1,3,5,7,9]:[1,2,3,4,5],lm==='best'?(oldL===2?3:oldL):oldL);}
+  $('start-match').addEventListener('click',startMatch);
+  $('get-started').addEventListener('click',openSetup);
+  $('menu-toggle').addEventListener('click',toggleAppMenu);
+  initPwa();
+  $('open-archive').addEventListener('click',()=>{closeAppMenu();showArchive();});
+  document.addEventListener('pointerdown',dismissAppMenuOnPointer);
+  document.addEventListener('keydown',dismissAppMenuOnEscape,true);
+  document.addEventListener('click',guardTransition,true);
+  document.addEventListener('pointerdown',touchFeedback);
+  $('save-retry').addEventListener('click',retrySave);
+  $('save-pdf').addEventListener('click',()=>{if(state.teams)downloadPdf();});
+  $('save-json').addEventListener('click',downloadRecoveryJson);
+  $('fullscreen').addEventListener('click',toggleFullscreen);
+  $('fullscreen-game').addEventListener('click',toggleFullscreen);
+  document.addEventListener('fullscreenchange',updateFullscreenButtons);updateFullscreenButtons();
+  $('game-mode').addEventListener('change',syncCounts);$('leg-mode').addEventListener('change',syncCounts);
+  document.querySelectorAll('[data-key]').forEach(b=>b.addEventListener('click',()=>handleKey(b.dataset.key)));
+  $('open-history0').addEventListener('click',showHistory);
+  $('open-history1').addEventListener('click',showHistory);
+  $('enter-score').addEventListener('click',submit);$('undo').addEventListener('click',undo);$('new-match').addEventListener('click',resetConfirm);
+  document.addEventListener('keydown',trapDialogFocus);
+  document.addEventListener('keydown',e=>{if(!canMutate())return;if(e.key==='Escape'&&!$('shade').hidden){e.preventDefault();dismissDialogOnEscape();return;}if(state.phase!=='live'||!$('shade').hidden||e.target.matches('input,select,textarea'))return;if(/^[0-9]$/.test(e.key)){e.preventDefault();setDigit(e.key);}else if(e.key==='Backspace'){draft=draft.slice(0,-1);render();}else if(e.key==='Escape'){draft='';render();}else if(e.key==='Enter'){e.preventDefault();submit();}});
+  window.addEventListener('storage',e=>{if(e.key===KEY&&canMutate())initialize();});
+  window.RetroHandleBack=()=>{if(!$('app-menu').hidden){closeAppMenu(true);return true;}if(!canMutate()||!$('save-blocker').hidden)return true;if(!$('shade').hidden&&modalType==='undo'){cancelUndo();return true;}if(!$('shade').hidden&&(modalType.includes('history')||modalType==='new match')){closeDialog();render();return true;}if(state.phase==='setup'&&setupOpen){setupOpen=false;render();return true;}return false;};
+  syncCounts();render();
+  window.RetroReady=initialize();
+})();
+</script>
+<script>if("serviceWorker" in navigator && location.protocol!=="file:") window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").then(()=>navigator.serviceWorker.ready).then(()=>window.dispatchEvent(new Event("retro-pwa-ready"))).catch(()=>window.dispatchEvent(new Event("retro-pwa-ready"))));</script>
+</body>
+</html>
+
